@@ -1,16 +1,15 @@
 from datamodel import OrderDepth, TradingState, Order
 from typing import List
 
+
 class Trader:
     EMERALDS = "EMERALDS"
     TOMATOES = "TOMATOES"
 
-    EMERALD_LIMIT = 75 
-    TOMATO_LIMIT  = 75
-
-    
-    EMERALD_SKEW = 2
-    TOMATO_SKEW  = 1
+    EMERALD_LIMIT = 70
+    TOMATO_LIMIT  = 70
+    EMERALD_SKEW  = 2
+    TOMATO_SKEW   = 1
 
     def run(self, state: TradingState):
         result = {}
@@ -25,9 +24,10 @@ class Trader:
         ask = min(od.sell_orders.keys()) if od.sell_orders else None
         return bid, ask
 
+    # ─── EMERALDS ────────────────────────────────────────────────────────────────
+
     def trade_emeralds(self, state: TradingState) -> List[Order]:
-        
-        od  = state.order_depths[self.EMERALDS]
+        od = state.order_depths[self.EMERALDS]
         bid, ask = self.best_bid_ask(od)
         if bid is None or ask is None:
             return []
@@ -35,8 +35,8 @@ class Trader:
         FV   = 10000
         pos  = state.position.get(self.EMERALDS, 0)
         LIM  = self.EMERALD_LIMIT
-        bcap = LIM - pos
-        scap = LIM + pos
+        bcap = min(LIM - pos, LIM)   # how much more we can buy
+        scap = min(LIM + pos, LIM)   # how much more we can sell
         orders: List[Order] = []
 
         for price in sorted(od.buy_orders.keys(), reverse=True):
@@ -53,11 +53,11 @@ class Trader:
             orders.append(Order(self.EMERALDS, price, vol))
             bcap -= vol
 
+        # Passive MM both sides with inventory skew
         pos_ratio = pos / LIM if LIM != 0 else 0
         skew      = round(pos_ratio * self.EMERALD_SKEW)
-
-        pbid = bid + 1 - skew
-        pask = ask - 1 - skew
+        pbid      = bid + 1 - skew
+        pask      = ask - 1 - skew
 
         if pbid < pask:
             if bcap > 0: orders.append(Order(self.EMERALDS, pbid,  bcap))
@@ -68,28 +68,28 @@ class Trader:
 
         return orders
 
-    def trade_tomatoes(self, state: TradingState) -> List[Order]:
 
-        od  = state.order_depths[self.TOMATOES]
+    def trade_tomatoes(self, state: TradingState) -> List[Order]:
+        od = state.order_depths[self.TOMATOES]
         bid, ask = self.best_bid_ask(od)
         if bid is None or ask is None:
             return []
 
-        mid  = (bid + ask) / 2.0
+        fair_value = (bid + ask) / 2.0   # live mid, no lag
+
         pos  = state.position.get(self.TOMATOES, 0)
         LIM  = self.TOMATO_LIMIT
-        bcap = LIM - pos
-        scap = LIM + pos
+        bcap = min(LIM - pos, LIM)
+        scap = min(LIM + pos, LIM)
         orders: List[Order] = []
 
-        
-        if bid > mid and scap > 0:
+        if bid >= fair_value + 1 and scap > 0:
             vol = min(scap, abs(od.buy_orders.get(bid, 0)))
             if vol > 0:
                 orders.append(Order(self.TOMATOES, bid, -vol))
                 scap -= vol
 
-        if ask < mid and bcap > 0:
+        if ask <= fair_value - 1 and bcap > 0:
             vol = min(bcap, abs(od.sell_orders.get(ask, 0)))
             if vol > 0:
                 orders.append(Order(self.TOMATOES, ask, vol))
@@ -97,13 +97,8 @@ class Trader:
 
         pos_ratio = pos / LIM if LIM != 0 else 0
         skew      = round(pos_ratio * self.TOMATO_SKEW)
-
-        pbid = bid + 1 - skew
-        pask = ask - 1 - skew
-
-        # Anchor to live mid so we never buy above or sell below fair value
-        pbid = min(pbid, int(mid))
-        pask = max(pask, int(mid) + 1)
+        pbid      = bid + 1 - skew
+        pask      = ask - 1 - skew
 
         if pbid < pask:
             if bcap > 0: orders.append(Order(self.TOMATOES, pbid,  bcap))
