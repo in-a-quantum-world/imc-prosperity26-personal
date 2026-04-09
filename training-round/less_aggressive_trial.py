@@ -62,7 +62,7 @@ class Trader:
         if pbid < pask:
             if bcap > 0: orders.append(Order(self.EMERALDS, pbid,  bcap))
             if scap > 0: orders.append(Order(self.EMERALDS, pask, -scap))
-        else:
+        elif bid + 1 < ask - 1:
             if bcap > 0: orders.append(Order(self.EMERALDS, bid + 1,  bcap))
             if scap > 0: orders.append(Order(self.EMERALDS, ask - 1, -scap))
 
@@ -83,13 +83,14 @@ class Trader:
         scap = min(LIM + pos, LIM)
         orders: List[Order] = []
 
-        if bid >= fair_value + 1 and scap > 0:
+        half_spread = (ask - bid) / 2.0
+        if bid > fair_value + half_spread * 0.5 and scap > 0:
             vol = min(scap, abs(od.buy_orders.get(bid, 0)))
             if vol > 0:
                 orders.append(Order(self.TOMATOES, bid, -vol))
                 scap -= vol
 
-        if ask <= fair_value - 1 and bcap > 0:
+        if ask < fair_value - half_spread * 0.5 and bcap > 0:
             vol = min(bcap, abs(od.sell_orders.get(ask, 0)))
             if vol > 0:
                 orders.append(Order(self.TOMATOES, ask, vol))
@@ -103,7 +104,7 @@ class Trader:
         if pbid < pask:
             if bcap > 0: orders.append(Order(self.TOMATOES, pbid,  bcap))
             if scap > 0: orders.append(Order(self.TOMATOES, pask, -scap))
-        else:
+        elif bid + 1 < ask - 1:
             if bcap > 0: orders.append(Order(self.TOMATOES, bid + 1,  bcap))
             if scap > 0: orders.append(Order(self.TOMATOES, ask - 1, -scap))
 
