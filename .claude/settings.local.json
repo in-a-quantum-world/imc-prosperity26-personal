@@ -3,7 +3,36 @@
     "allow": [
       "Bash(python3 -c ':*)",
       "Bash(pip --version)",
-      "Bash(uv --version)"
+      "Bash(uv --version)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(uv venv:*)",
+      "Bash(uv sync:*)",
+      "Bash(py -3.13 --version)",
+      "Bash(py -3.12 --version)",
+      "Bash(py -3.11 --version)",
+      "Bash(py -3.10 --version)",
+      "Bash(py -3.12 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(uv pip:*)",
+      "Bash(mkdir -p \"c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-2-backtester/prosperity2bt/resources/round0_p4\")",
+      "Bash(cp c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/data/round0/prices_round_0_day_-1.csv c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-2-backtester/prosperity2bt/resources/round0_p4/)",
+      "Bash(cp c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/data/round0/prices_round_0_day_-2.csv c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-2-backtester/prosperity2bt/resources/round0_p4/)",
+      "Bash(cp c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/data/round0/trades_round_0_day_-1.csv c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-2-backtester/prosperity2bt/resources/round0_p4/)",
+      "Bash(cp c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/data/round0/trades_round_0_day_-2.csv c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-2-backtester/prosperity2bt/resources/round0_p4/)",
+      "Bash(\"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/pip.exe\" install:*)",
+      "Bash(c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe -m pip install jsonpickle -q)",
+      "Bash(c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe -c 'import jsonpickle; print\\('\\\\''ok'\\\\''\\)')",
+      "Bash(c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe -c ':*)",
+      "Bash(\"backtester/.venv/Scripts/python.exe\" -m prosperity4mcbt ../../training-round/trader1.py --quick)",
+      "Bash(echo \"trader1 started with PID $!\")",
+      "Bash(\"backtester/.venv/Scripts/python.exe\" -m prosperity4mcbt ../../training-round/trader2_training.py --quick)",
+      "Bash(\"backtester/.venv/Scripts/python.exe\" -m prosperity4mcbt ../../training-round/shriyans-logs/57971.py --quick)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader1.py 0)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader2_training.py 0)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader2_training.py 0 --no-out)",
+      "Bash(\"backtester/.venv/Scripts/python.exe\" -m prosperity4mcbt ../../training-round/trader_merged.py --quick)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader_merged.py 0 --no-out)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader_merged.py 0--2 --no-out --print)"
     ]
   }
 }
