@@ -10,6 +10,7 @@ SKEW  = 15
 class Trader:
 
     def run(self, state: TradingState):
+        print(state.toJSON())
         last_tmid = None
         try:
             raw = state.traderData

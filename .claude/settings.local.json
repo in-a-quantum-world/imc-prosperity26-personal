@@ -32,7 +32,17 @@
       "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader2_training.py 0 --no-out)",
       "Bash(\"backtester/.venv/Scripts/python.exe\" -m prosperity4mcbt ../../training-round/trader_merged.py --quick)",
       "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader_merged.py 0 --no-out)",
-      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader_merged.py 0--2 --no-out --print)"
+      "Bash(PYTHONPATH=\"prosperity4bt\" \"c:/quant-hacks/imc-prosperity26/backtester/monte-carlo-backtester/backtester/.venv/Scripts/python.exe\" -m prosperity4bt ../../training-round/trader_merged.py 0--2 --no-out --print)",
+      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4mcbt \"../../training-round/trader_merged.py\" --quick)",
+      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4bt \"../../training-round/trader_merged.py\" 0 --no-out)",
+      "Bash(python -m prosperity4bt \"../../training-round/trader_merged.py\" 0 --no-out)",
+      "Bash(PYTHONPATH=\"prosperity4bt\" python -m prosperity4bt \"../../training-round/trader_merged.py\" 0 --no-out)",
+      "Bash(cp \"c:/quant-hacks/imc-prosperity26/training-round/trader_merged.py\" \"/tmp/trader_78.py\")",
+      "Bash(sed -i 's/LIMIT = 75/LIMIT = 78/' /tmp/trader_78.py)",
+      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4mcbt \"/tmp/trader_78.py\" --quick)",
+      "Bash(cp \"c:/quant-hacks/imc-prosperity26/training-round/trader_merged.py\" \"/tmp/trader_80.py\")",
+      "Bash(sed -i 's/LIMIT = 75/LIMIT = 80/' /tmp/trader_80.py)",
+      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4mcbt \"/tmp/trader_80.py\" --quick)"
     ]
   }
 }
