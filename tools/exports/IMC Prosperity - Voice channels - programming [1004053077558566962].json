@@ -1,0 +1,22 @@
+{
+  "guild": {
+    "id": "1001852729725046804",
+    "name": "IMC Prosperity",
+    "iconUrl": "https://cdn.discordapp.com/icons/1001852729725046804/aeb194f8d085d280182749f7e7da9ee5.png?size=512"
+  },
+  "channel": {
+    "id": "1004053077558566962",
+    "type": "GuildVoiceChat",
+    "categoryId": "1001852729725046806",
+    "category": "Voice channels",
+    "name": "programming",
+    "topic": null
+  },
+  "dateRange": {
+    "after": null,
+    "before": null
+  },
+  "exportedAt": "2026-04-11T18:38:54.3878534+01:00",
+  "messages": [],
+  "messageCount": 0
+}

@@ -1,0 +1,576 @@
+{
+  "guild": {
+    "id": "1001852729725046804",
+    "name": "IMC Prosperity",
+    "iconUrl": "https://cdn.discordapp.com/icons/1001852729725046804/aeb194f8d085d280182749f7e7da9ee5.png?size=512"
+  },
+  "channel": {
+    "id": "1476867465601355851",
+    "type": "GuildTextChat",
+    "categoryId": "1001852729725046805",
+    "category": "Text channels",
+    "name": "find-teammates",
+    "topic": null
+  },
+  "dateRange": {
+    "after": null,
+    "before": null
+  },
+  "exportedAt": "2026-04-11T18:40:20.1563383+01:00",
+  "messages": [
+    {
+      "id": "1478014944829112391",
+      "type": "Default",
+      "timestamp": "2026-03-02T13:03:43.037+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "what if im not competitive",
+      "author": {
+        "id": "1099283744415821834",
+        "name": "abd1718",
+        "discriminator": "0000",
+        "nickname": "Abd",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/1099283744415821834/1619be620806d2640b61da2a1207bc39.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478015037493743616",
+      "type": "Default",
+      "timestamp": "2026-03-02T13:04:05.13+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "looking for people to join my team. I don't care about your qualifications. As long as you are committed, reliable, and put in effort, that's all that matters to me \uD83D\uDE42",
+      "author": {
+        "id": "792822535019692052",
+        "name": "marala65",
+        "discriminator": "0000",
+        "nickname": "marala65",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/792822535019692052/bac36d38a27800870d69cedd244c8a7a.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": [
+        {
+          "id": "",
+          "name": "\uD83D\uDE42",
+          "code": "slight_smile",
+          "isAnimated": false,
+          "imageUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f642.svg"
+        }
+      ]
+    },
+    {
+      "id": "1478020414994256055",
+      "type": "Default",
+      "timestamp": "2026-03-02T13:25:27.226+00:00",
+      "timestampEdited": "2026-03-02T14:44:39.51+00:00",
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Looking for a potential person to fill final spot in the team;\nAbout us - Mathematics @ Cardiff, CS @ Purdue, CS @ Virginia Tech, Math & CS @ Knox. \n\nLast year in R5 we were 3rd in the UK & 34th globally. \n\nLooking for someone who competed last year, ideally Math/CS/Physics major at UG/PG/PhD, and competitive. \n\nFeel free to DM. \n\nLast years member went to Optiver so is ineligible this year",
+      "author": {
+        "id": "260893968995188756",
+        "name": "jc005",
+        "discriminator": "0000",
+        "nickname": "JC",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/260893968995188756/0bef621d98eab12ca82969972cb7fa8c.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478027479754080266",
+      "type": "Default",
+      "timestamp": "2026-03-02T13:53:31.596+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Looking for a team this year.\nI'm an undergraduate cs major. In terms of my qualifications they lean more towards a software engineer but I'm extremely interested in quant and competitive as a person. I compete in a lot of hackathons. Placed 6th in Citadel's Terminal Competition. I'm looking for people who can take me under their wing who want someone who is ready to compete and learn. DM me if you are interested",
+      "author": {
+        "id": "630547839457689602",
+        "name": "dtangg",
+        "discriminator": "0000",
+        "nickname": "canto prince",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/630547839457689602/011aab5b0440da5d0610bfb5b3d9203a.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478044931892187277",
+      "type": "Default",
+      "timestamp": "2026-03-02T15:02:52.51+00:00",
+      "timestampEdited": "2026-03-02T15:03:07.594+00:00",
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Looking for teammates.\n\nRequirements to join:\n1. Pleasing personality\n2. Willing to grind\n3. Friendly\n4. Worked at SpaceX for at least 5 years\n5. Worked at NASA for at least 10 years\n6. Friends with Elon Musk or Jeff Bezos\n7. If you worked at META then you are not qualified.",
+      "author": {
+        "id": "713727782361759755",
+        "name": "geyzsonkristoffer",
+        "discriminator": "0000",
+        "nickname": "Mr. Nobody",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/713727782361759755/260c2a28ce0de7a7cc488a7615b1871a.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [
+        {
+          "emoji": {
+            "id": "",
+            "name": "\uD83D\uDE02",
+            "code": "joy",
+            "isAnimated": false,
+            "imageUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f602.svg"
+          },
+          "count": 12,
+          "users": [
+            {
+              "id": "260893968995188756",
+              "name": "jc005",
+              "discriminator": "0000",
+              "nickname": "JC",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/260893968995188756/0bef621d98eab12ca82969972cb7fa8c.png?size=512"
+            },
+            {
+              "id": "348232842221715458",
+              "name": "edward_curry.",
+              "discriminator": "0000",
+              "nickname": "edward_curry",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/embed/avatars/3.png"
+            },
+            {
+              "id": "443536942941077535",
+              "name": "ez_520",
+              "discriminator": "0000",
+              "nickname": "EZ",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/443536942941077535/b7a367753b17a5e48abb8c96125a956d.png?size=512"
+            },
+            {
+              "id": "525005875098812416",
+              "name": "ir0nstone",
+              "discriminator": "0000",
+              "nickname": "Ironstone",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/525005875098812416/040e256e62e8c5c808c9cfa6d1424e2b.png?size=512"
+            },
+            {
+              "id": "539997870082752522",
+              "name": "khuepr123",
+              "discriminator": "0000",
+              "nickname": "Khuepr123",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/539997870082752522/be15652adec1926fe85571253443d416.png?size=512"
+            },
+            {
+              "id": "544932245274755082",
+              "name": "johnny3779",
+              "discriminator": "0000",
+              "nickname": "johnny",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/544932245274755082/004a6c6f05605025518493c956db0655.png?size=512"
+            },
+            {
+              "id": "611347257924517889",
+              "name": "journeytonowhere",
+              "discriminator": "0000",
+              "nickname": "journeytonowhere",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/611347257924517889/28427bfd08064564654bf0cc17788a2e.png?size=512"
+            },
+            {
+              "id": "695839958543368253",
+              "name": "oatalicious",
+              "discriminator": "0000",
+              "nickname": "oat",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/695839958543368253/527b82b89f26cfe2b1873ff87cdde578.png?size=512"
+            },
+            {
+              "id": "733037311750832159",
+              "name": "meadem",
+              "discriminator": "0000",
+              "nickname": "Meadem",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/733037311750832159/7b74c6b55fada01331d18f33058e34c4.png?size=512"
+            },
+            {
+              "id": "767800436258111508",
+              "name": "dusty_100",
+              "discriminator": "0000",
+              "nickname": "Dusty",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/767800436258111508/5e2246632fcf151a4da80a72b5b9779e.png?size=512"
+            },
+            {
+              "id": "858870090263035904",
+              "name": "elliot9793",
+              "discriminator": "0000",
+              "nickname": "Elliot",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/858870090263035904/64a2f30a33501cdd75eaab0edb255c38.png?size=512"
+            },
+            {
+              "id": "1066617600395714630",
+              "name": "pauldushime",
+              "discriminator": "0000",
+              "nickname": "Dan",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/embed/avatars/1.png"
+            }
+          ]
+        }
+      ],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478046664148385995",
+      "type": "Default",
+      "timestamp": "2026-03-02T15:09:45.512+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "",
+      "author": {
+        "id": "159985870458322944",
+        "name": "MEE6",
+        "discriminator": "4876",
+        "nickname": "A.R.I.A.",
+        "color": null,
+        "isBot": true,
+        "roles": [
+          {
+            "id": "1047410264477290577",
+            "name": "MEE6",
+            "color": null,
+            "position": 5
+          }
+        ],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/159985870458322944/765030df32975c5b23f8dfe86d6ff520.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [
+        {
+          "title": "",
+          "url": null,
+          "timestamp": null,
+          "description": "**Reason:** Posted an invite",
+          "color": "#5BCEF5",
+          "author": {
+            "name": "demoncrowley24 has been warned",
+            "url": null,
+            "iconUrl": "https://images-ext-1.discordapp.net/external/mYOZIzcxu2AyON9NfzG5tYSDL-_INRyzYo7hjB2zenY/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/1272525748783288416/6c5996770c985bcd6e5b68131ff2ba04.png",
+            "iconCanonicalUrl": "https://cdn.discordapp.com/avatars/1272525748783288416/6c5996770c985bcd6e5b68131ff2ba04.png?size=1024"
+          },
+          "images": [],
+          "fields": [],
+          "inlineEmojis": []
+        }
+      ],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478055188102119686",
+      "type": "Default",
+      "timestamp": "2026-03-02T15:43:37.781+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Looking for teammates with 3+ years of experience at JS or HRT, who are willing to resign and enrol in university to ensure the team is eligible for prizes. Please share PnL track record. IMO or IOI medalists are preferred.",
+      "author": {
+        "id": "1147323506955141120",
+        "name": "wrenl",
+        "discriminator": "0000",
+        "nickname": "l",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/1147323506955141120/3497492161d354377bb4c3b19aed9552.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [
+        {
+          "emoji": {
+            "id": "",
+            "name": "\uD83D\uDE02",
+            "code": "joy",
+            "isAnimated": false,
+            "imageUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f602.svg"
+          },
+          "count": 2,
+          "users": [
+            {
+              "id": "233298719150309386",
+              "name": "ntjs53",
+              "discriminator": "0000",
+              "nickname": "Nick53",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/233298719150309386/a034c2bc89e91d5a386444736ea31947.png?size=512"
+            },
+            {
+              "id": "1481496524608503901",
+              "name": "uqylu17_29029",
+              "discriminator": "0000",
+              "nickname": "uqylu17",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/embed/avatars/3.png"
+            }
+          ]
+        }
+      ],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478055427710390382",
+      "type": "Default",
+      "timestamp": "2026-03-02T15:44:34.908+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Here i am",
+      "author": {
+        "id": "1111834465128415272",
+        "name": "freezinggaits",
+        "discriminator": "0000",
+        "nickname": "Freezing Gaits (寒い)\uD83E\uDD40",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/1111834465128415272/76843ecd88bf254678be956c1551c697.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478055530781216839",
+      "type": "Default",
+      "timestamp": "2026-03-02T15:44:59.482+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "@Jack",
+      "author": {
+        "id": "1111834465128415272",
+        "name": "freezinggaits",
+        "discriminator": "0000",
+        "nickname": "Freezing Gaits (寒い)\uD83E\uDD40",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/1111834465128415272/76843ecd88bf254678be956c1551c697.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [
+        {
+          "id": "477873972390920194",
+          "name": "jack_0010",
+          "discriminator": "0000",
+          "nickname": "Jack",
+          "color": null,
+          "isBot": false,
+          "roles": [],
+          "avatarUrl": "https://cdn.discordapp.com/avatars/477873972390920194/e8daf405bed742bad04ce758fc3dfac7.png?size=512"
+        }
+      ],
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478055930984661113",
+      "type": "Reply",
+      "timestamp": "2026-03-02T15:46:34.898+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Got 4 years at RenTech, just enrolled at Coventry Uni for you",
+      "author": {
+        "id": "260893968995188756",
+        "name": "jc005",
+        "discriminator": "0000",
+        "nickname": "JC",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/260893968995188756/0bef621d98eab12ca82969972cb7fa8c.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [
+        {
+          "emoji": {
+            "id": "",
+            "name": "\uD83D\uDC80",
+            "code": "skull",
+            "isAnimated": false,
+            "imageUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f480.svg"
+          },
+          "count": 1,
+          "users": [
+            {
+              "id": "1099283744415821834",
+              "name": "abd1718",
+              "discriminator": "0000",
+              "nickname": "Abd",
+              "color": null,
+              "isBot": false,
+              "avatarUrl": "https://cdn.discordapp.com/avatars/1099283744415821834/1619be620806d2640b61da2a1207bc39.png?size=512"
+            }
+          ]
+        }
+      ],
+      "mentions": [
+        {
+          "id": "1147323506955141120",
+          "name": "wrenl",
+          "discriminator": "0000",
+          "nickname": "l",
+          "color": null,
+          "isBot": false,
+          "roles": [],
+          "avatarUrl": "https://cdn.discordapp.com/avatars/1147323506955141120/3497492161d354377bb4c3b19aed9552.png?size=512"
+        }
+      ],
+      "reference": {
+        "type": "Default",
+        "messageId": "1478055188102119686",
+        "channelId": "1476867465601355851",
+        "guildId": "1001852729725046804"
+      },
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478071635859869890",
+      "type": "Reply",
+      "timestamp": "2026-03-02T16:48:59.232+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "Messaged!",
+      "author": {
+        "id": "539176469511798784",
+        "name": "baywos",
+        "discriminator": "0000",
+        "nickname": "bay",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/embed/avatars/4.png"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [],
+      "mentions": [
+        {
+          "id": "792822535019692052",
+          "name": "marala65",
+          "discriminator": "0000",
+          "nickname": "marala65",
+          "color": null,
+          "isBot": false,
+          "roles": [],
+          "avatarUrl": "https://cdn.discordapp.com/avatars/792822535019692052/bac36d38a27800870d69cedd244c8a7a.png?size=512"
+        }
+      ],
+      "reference": {
+        "type": "Default",
+        "messageId": "1478015037493743616",
+        "channelId": "1476867465601355851",
+        "guildId": "1001852729725046804"
+      },
+      "inlineEmojis": []
+    },
+    {
+      "id": "1478076432361193682",
+      "type": "Reply",
+      "timestamp": "2026-03-02T17:08:02.807+00:00",
+      "timestampEdited": null,
+      "callEndedTimestamp": null,
+      "isPinned": false,
+      "content": "cringe messages incoming 1 2 3...",
+      "author": {
+        "id": "1099283744415821834",
+        "name": "abd1718",
+        "discriminator": "0000",
+        "nickname": "Abd",
+        "color": null,
+        "isBot": false,
+        "roles": [],
+        "avatarUrl": "https://cdn.discordapp.com/avatars/1099283744415821834/1619be620806d2640b61da2a1207bc39.png?size=512"
+      },
+      "attachments": [],
+      "embeds": [],
+      "stickers": [],
+      "reactions": [
+        {
+          "emoji": {
+            "id": "",
+            "name": "\uD83D\uDC80",
+            "code": "skull",
+            "isAnimated": false,
+            "imageUrl": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f480.svg"
+          }
