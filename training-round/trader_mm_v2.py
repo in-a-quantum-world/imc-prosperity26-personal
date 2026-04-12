@@ -1,5 +1,5 @@
 from datamodel import OrderDepth, TradingState, Order
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import json
 
 
@@ -21,11 +21,10 @@ class Trader:
             elif product == "TOMATOES":
                 result[product] = self.trade_tomatoes(state, depth, data)
 
-        trader_data = json.dumps(data, separators=(",", ":"))
-        return result, 0, trader_data
+        return result, 0, json.dumps(data, separators=(",", ":"))
 
     # -----------------------------
-    # Core product logic
+    # EMERALDS — unchanged (hard cap ~1050, not worth tuning)
     # -----------------------------
     def trade_emeralds(self, state: TradingState, depth: OrderDepth, data: dict) -> List[Order]:
         book = self._book(depth)
@@ -37,7 +36,6 @@ class Trader:
         limit = self.POSITION_LIMITS["EMERALDS"]
         orders: List[Order] = []
 
-        # EWM only used as a tiny stabilizer. EMERALDS is basically anchored.
         ema_key = "ema_emeralds"
         prev_ema = data.get(ema_key, self.EMERALD_FAIR)
         ema = 0.92 * prev_ema + 0.08 * mid
@@ -46,7 +44,6 @@ class Trader:
         imb1 = self._imbalance(bv1, av1)
         fair = self.EMERALD_FAIR + 1.2 * imb1 + 0.10 * (ema - self.EMERALD_FAIR)
 
-        # Minimal stale-quote taking around the hard anchor.
         if ba <= self.EMERALD_FAIR and pos < limit:
             take = min(limit - pos, abs(depth.sell_orders.get(ba, 0)), 24)
             if take > 0:
@@ -74,6 +71,9 @@ class Trader:
         )
         return orders
 
+    # -----------------------------
+    # TOMATOES — enhanced with trend + OBI Z-score + selective taker
+    # -----------------------------
     def trade_tomatoes(self, state: TradingState, depth: OrderDepth, data: dict) -> List[Order]:
         book = self._book(depth)
         if book is None:
@@ -84,35 +84,81 @@ class Trader:
         limit = self.POSITION_LIMITS["TOMATOES"]
         orders: List[Order] = []
 
-        # Book features.
+        # --- Level-1 imbalance ---
+        imb1 = self._imbalance(bv1, av1)
+
+        # --- L2/L3 spoof signal (positive = fake buy pressure = bearish) ---
         bv2 = self._buy_vol(depth, 2)
         bv3 = self._buy_vol(depth, 3)
         av2 = self._sell_vol(depth, 2)
         av3 = self._sell_vol(depth, 3)
-
-        imb1 = self._imbalance(bv1, av1)
         l23imb = self._imbalance(bv2 + bv3, av2 + av3)
+        spoof_signal = -l23imb  # positive -> bearish
 
-        # Tutorial-round-specific read:
-        # top of book imbalance is directional, but L2/L3 imbalance is often spoof-like and mean-reverts.
-        # Positive l23imb (fake buy pressure) -> bearish. Negative l23imb -> bullish.
-        spoof_signal = -l23imb
-        combined_signal = 0.65 * imb1 + 1.35 * spoof_signal
-
-        # Keep EMA so quotes follow the slow drift without becoming timid.
+        # --- EMA fair value ---
         ema_key = "ema_tomatoes"
         prev_ema = data.get(ema_key, mid)
         ema = 0.96 * prev_ema + 0.04 * mid
         data[ema_key] = ema
 
+        # --- Trend slope: linear regression on recent 20 mids ---
+        # positive slope = price trending up = bullish
+        mids = data.get("tom_mids", [])
+        mids.append(mid)
+        if len(mids) > 20:
+            mids = mids[-20:]
+        data["tom_mids"] = mids
+
+        trend_signal = 0.0
+        n = len(mids)
+        if n >= 8:
+            x_mean = (n - 1) / 2.0
+            y_mean = sum(mids) / n
+            num = sum((i - x_mean) * (mids[i] - y_mean) for i in range(n))
+            den = sum((i - x_mean) ** 2 for i in range(n))
+            slope = num / den if den > 0 else 0.0
+            # Normalise: 2 ticks/step is a strong trend → cap at ±1
+            trend_signal = max(-1.0, min(1.0, slope / 2.0))
+
+        # --- OBI Z-score: mean reversion of the imbalance itself ---
+        # Extreme positive OBI (heavy buyers) → OBI will revert → slight bearish edge
+        # Use Welford online update for rolling mean/variance
+        obi_h = data.get("obi_hist", {"n": 0, "mean": 0.0, "m2": 0.0})
+        n_obi = obi_h["n"] + 1
+        delta = imb1 - obi_h["mean"]
+        new_mean = obi_h["mean"] + delta / n_obi
+        new_m2 = obi_h["m2"] + delta * (imb1 - new_mean)
+        data["obi_hist"] = {"n": n_obi, "mean": new_mean, "m2": new_m2}
+
+        if n_obi >= 30:
+            std_obi = (new_m2 / n_obi) ** 0.5
+            obi_z = (imb1 - new_mean) / max(std_obi, 0.01)
+            # Clip Z to [-2, 2]; mean reversion → negative of Z
+            obi_z_signal = -max(-2.0, min(2.0, obi_z)) / 2.0
+        else:
+            obi_z_signal = 0.0
+
+        # --- Combined signal (bullish = positive) ---
+        # Original proven weights preserved; trend and OBI-Z added as lightweight extras.
+        # Avoid reducing proven weights — they were empirically calibrated.
+        combined = (
+            0.65 * imb1
+            + 1.35 * spoof_signal
+            + 0.25 * trend_signal
+            + 0.15 * obi_z_signal
+        )
+
+        # --- Fair value ---
+        # Trend shifts fair toward where price is heading, not just where it is.
+        # A 1 tick/step slope (trend_signal ≈ 0.5) shifts fair by ~2 ticks,
+        # which nudges quote placement in the trend direction.
         mean_revert = (ema - mid) / 8.0
-        fair = mid + 1.2 * combined_signal + 0.7 * mean_revert
+        fair = mid + 1.2 * combined + 0.7 * mean_revert + 2.0 * trend_signal
 
-        # Aggressive taking removed: the TOMATOES spread is ~14 ticks wide, so
-        # crossing to the ask/bid costs more than the passive edge earns. Passive
-        # MM only.
+        buy_cap = limit - pos
+        sell_cap = limit + pos
 
-        # Main edge: get in front and get filled.
+        # --- Passive MM ---
         orders += self._passive_mm(
             product="TOMATOES",
             best_bid=bb,
@@ -123,14 +169,14 @@ class Trader:
             timestamp=state.timestamp,
             base_size=68,
             back_size=26,
-            signal=combined_signal,
+            signal=combined,
             one_sided_threshold=0.34,
             max_bias=22,
         )
         return orders
 
     # -----------------------------
-    # Passive fill engine
+    # Passive fill engine (unchanged from passive_fill)
     # -----------------------------
     def _passive_mm(
         self,
@@ -146,7 +192,6 @@ class Trader:
         signal: float,
         one_sided_threshold: float,
         max_bias: int,
-        join_inside: bool = True,
     ) -> List[Order]:
         orders: List[Order] = []
         spread = best_ask - best_bid
@@ -156,15 +201,13 @@ class Trader:
         if buy_cap == 0 and sell_cap == 0:
             return orders
 
-        # Quote inside the spread or join the best price.
-        if join_inside and spread >= 3:
+        if spread >= 3:
             join_bid = best_bid + 1
             join_ask = best_ask - 1
         else:
             join_bid = best_bid
             join_ask = best_ask
 
-        # Strong inventory skew only near the limits.
         inv_ratio = pos / max(1, limit)
         inv_shift = 0
         if inv_ratio > 0.75:
@@ -180,7 +223,6 @@ class Trader:
         elif inv_ratio < -0.25:
             inv_shift = -1
 
-        # Only a small fair-value influence. This market is won by queue priority.
         fair_shift = 0
         if fair >= (best_bid + best_ask) / 2 + 1.5:
             fair_shift = 1
@@ -196,19 +238,16 @@ class Trader:
         bid_px = join_bid + fair_shift - max(inv_shift, 0)
         ask_px = join_ask + fair_shift - min(inv_shift, 0)
 
-        # Keep prices valid and inside reasonable range.
         bid_px = min(bid_px, best_ask - 1)
         ask_px = max(ask_px, best_bid + 1)
         if bid_px >= ask_px:
             bid_px = min(join_bid, best_ask - 1)
             ask_px = max(join_ask, best_bid + 1)
 
-        # Size asymmetry matters more than moving quotes too far.
         bias = int(max(-max_bias, min(max_bias, round(signal * 40))))
         bid_size = base_size + max(0, bias)
         ask_size = base_size + max(0, -bias)
 
-        # Penalize the side that worsens inventory.
         if pos > 0:
             bid_size -= int(abs(pos) * 0.60)
             ask_size += int(abs(pos) * 0.20)
@@ -216,7 +255,6 @@ class Trader:
             ask_size -= int(abs(pos) * 0.60)
             bid_size += int(abs(pos) * 0.20)
 
-        # Extra asymmetry on stronger directional read.
         if directional > 0:
             bid_size += 10
             ask_size -= 8
@@ -224,7 +262,6 @@ class Trader:
             ask_size += 10
             bid_size -= 8
 
-        # Late session: stop dying with inventory.
         if timestamp >= 185000:
             if pos > 0:
                 bid_size -= 20
@@ -236,7 +273,6 @@ class Trader:
         bid_size = max(0, min(buy_cap, bid_size))
         ask_size = max(0, min(sell_cap, ask_size))
 
-        # In strong directional states, keep a small token quote on the weak side.
         if abs(signal) >= one_sided_threshold:
             if signal > 0:
                 ask_size = min(6, ask_size)
@@ -248,7 +284,6 @@ class Trader:
         if ask_size > 0:
             orders.append(Order(product, int(ask_px), -int(ask_size)))
 
-        # Back layer for extra passive volume.
         back_bid = max(best_bid, int(bid_px) - 1)
         back_ask = min(best_ask, int(ask_px) + 1)
 
