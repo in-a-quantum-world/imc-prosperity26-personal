@@ -7,6 +7,7 @@ class Trader:
     POSITION_LIMITS = {
         "EMERALDS": 80,
         "TOMATOES": 80,
+        "MOON_ROCKS": 80,
     }
 
     EMERALD_FAIR = 10000
@@ -20,55 +21,56 @@ class Trader:
                 result[product] = self.trade_emeralds(state, depth, data)
             elif product == "TOMATOES":
                 result[product] = self.trade_tomatoes(state, depth, data)
+            elif product == "MOON_ROCKS":
+                result[product] = self.trade_moon_rocks(state, depth, data)
 
         return result, 0, json.dumps(data, separators=(",", ":"))
 
     # -----------------------------
-    # EMERALDS — unchanged (hard cap ~1050, not worth tuning)
+    # EMERALDS — full-size passive MM, no inventory penalty
     # -----------------------------
+    # trader_merged.py gets +2000–3000 more on Emeralds vs our signal-based approach
+    # because it always posts 79 units with no size reduction. Since Emeralds is
+    # anchored at 10000, any inventory will revert — inventory penalty just costs fills.
     def trade_emeralds(self, state: TradingState, depth: OrderDepth, data: dict) -> List[Order]:
-        book = self._book(depth)
-        if book is None:
+        if not depth.buy_orders or not depth.sell_orders:
             return []
 
-        bb, bv1, ba, av1, mid = book
+        bb = max(depth.buy_orders.keys())
+        ba = min(depth.sell_orders.keys())
+        fv = self.EMERALD_FAIR
         pos = state.position.get("EMERALDS", 0)
-        limit = self.POSITION_LIMITS["EMERALDS"]
+        # Use 79 (not 80) to maintain queue priority without hitting hard limit
+        limit = 79
+        buy_cap = limit - pos
+        sell_cap = limit + pos
         orders: List[Order] = []
 
-        ema_key = "ema_emeralds"
-        prev_ema = data.get(ema_key, self.EMERALD_FAIR)
-        ema = 0.92 * prev_ema + 0.08 * mid
-        data[ema_key] = ema
-
-        imb1 = self._imbalance(bv1, av1)
-        fair = self.EMERALD_FAIR + 1.2 * imb1 + 0.10 * (ema - self.EMERALD_FAIR)
-
-        if ba <= self.EMERALD_FAIR and pos < limit:
-            take = min(limit - pos, abs(depth.sell_orders.get(ba, 0)), 24)
+        # Take obvious mispricings against the hard anchor
+        if ba < fv and buy_cap > 0:
+            take = min(buy_cap, abs(depth.sell_orders.get(ba, 0)))
             if take > 0:
                 orders.append(Order("EMERALDS", ba, take))
-                pos += take
-        if bb >= self.EMERALD_FAIR and pos > -limit:
-            take = min(limit + pos, depth.buy_orders.get(bb, 0), 24)
+                buy_cap -= take
+        if bb > fv and sell_cap > 0:
+            take = min(sell_cap, depth.buy_orders.get(bb, 0))
             if take > 0:
                 orders.append(Order("EMERALDS", bb, -take))
-                pos -= take
+                sell_cap -= take
 
-        orders += self._passive_mm(
-            product="EMERALDS",
-            best_bid=bb,
-            best_ask=ba,
-            fair=fair,
-            pos=pos,
-            limit=limit,
-            timestamp=state.timestamp,
-            base_size=68,
-            back_size=16,
-            signal=imb1,
-            one_sided_threshold=0.30,
-            max_bias=18,
-        )
+        # Passive MM: join inside the spread at full remaining capacity.
+        # Pin bids below FV and asks above FV to avoid accidental crossing.
+        bid_px = min(bb + 1, fv - 1)
+        ask_px = max(ba - 1, fv + 1)
+        if bid_px >= ask_px:
+            bid_px = fv - 1
+            ask_px = fv + 1
+
+        if buy_cap > 0:
+            orders.append(Order("EMERALDS", bid_px, buy_cap))
+        if sell_cap > 0:
+            orders.append(Order("EMERALDS", ask_px, -sell_cap))
+
         return orders
 
     # -----------------------------
@@ -95,11 +97,22 @@ class Trader:
         l23imb = self._imbalance(bv2 + bv3, av2 + av3)
         spoof_signal = -l23imb  # positive -> bearish
 
-        # --- EMA fair value ---
+        # --- EMA fair value + macro drift detector ---
         ema_key = "ema_tomatoes"
         prev_ema = data.get(ema_key, mid)
         ema = 0.96 * prev_ema + 0.04 * mid
         data[ema_key] = ema
+
+        # Very slow EMA (alpha=0.001, half-life ~693 steps ≈ 7% of a day).
+        # In steady state with a 49-tick/day drift: ema_diff ≈ ±4.8 ticks → slow_drift ≈ ±1.0.
+        # Fast EMA (alpha=0.04) lags 1.2 ticks behind a 0.0049 tick/step drift;
+        # slow EMA lags 4.9 ticks → ema_diff = fast-slow ≈ -3.7 ticks (bearish).
+        # Warm-up: ~700 steps to reach steady state, so no false signals at day start.
+        prev_slow = data.get("slow_ema_tom", mid)
+        slow_ema = 0.999 * prev_slow + 0.001 * mid
+        data["slow_ema_tom"] = slow_ema
+        # Normalise: 4-tick ema_diff = signal of 1.0 (capped at ±1.5)
+        slow_drift = max(-1.5, min(1.5, (ema - slow_ema) / 4.0))
 
         # --- Trend slope: linear regression on recent 20 mids ---
         # positive slope = price trending up = bullish
@@ -117,8 +130,8 @@ class Trader:
             num = sum((i - x_mean) * (mids[i] - y_mean) for i in range(n))
             den = sum((i - x_mean) ** 2 for i in range(n))
             slope = num / den if den > 0 else 0.0
-            # Normalise: 2 ticks/step is a strong trend → cap at ±1
-            trend_signal = max(-1.0, min(1.0, slope / 2.0))
+            # Normalise: observed max slope ~0.44 ticks/step; 0.3 maps that to ≈1
+            trend_signal = max(-1.0, min(1.0, slope / 0.3))
 
         # --- OBI Z-score: mean reversion of the imbalance itself ---
         # Extreme positive OBI (heavy buyers) → OBI will revert → slight bearish edge
@@ -141,19 +154,21 @@ class Trader:
         # --- Combined signal (bullish = positive) ---
         # Original proven weights preserved; trend and OBI-Z added as lightweight extras.
         # Avoid reducing proven weights — they were empirically calibrated.
+        # slow_drift: macro regime detector (alpha=0.001, half-life ~693 steps).
+        # Weight 0.10 is neutral on Kevin's day-2 and only -81 on day-1 (acceptable).
         combined = (
             0.65 * imb1
             + 1.35 * spoof_signal
             + 0.25 * trend_signal
             + 0.15 * obi_z_signal
+            + 0.10 * slow_drift
         )
 
         # --- Fair value ---
-        # Trend shifts fair toward where price is heading, not just where it is.
-        # A 1 tick/step slope (trend_signal ≈ 0.5) shifts fair by ~2 ticks,
-        # which nudges quote placement in the trend direction.
+        # slow_drift excluded from fair: fair_shift logic penalises it heavily in .worse mode.
+        # Drift edge comes from size/directional bias via combined signal instead.
         mean_revert = (ema - mid) / 8.0
-        fair = mid + 1.2 * combined + 0.7 * mean_revert + 2.0 * trend_signal
+        fair = mid + 1.2 * combined + 0.7 * mean_revert + 0.8 * trend_signal
 
         buy_cap = limit - pos
         sell_cap = limit + pos
@@ -170,9 +185,51 @@ class Trader:
             base_size=68,
             back_size=26,
             signal=combined,
-            one_sided_threshold=0.34,
-            max_bias=22,
+            one_sided_threshold=0.28,
+            max_bias=28,
         )
+        return orders
+
+    # -----------------------------
+    # MOON_ROCKS — pure passive MM until Round 1 data reveals dynamics
+    # -----------------------------
+    # No fair-value anchor, no signals. Post bid+1/ask-1 at max size, no inventory
+    # penalty. Same philosophy as trader_merged: maximise fills first, add signals
+    # once we have 2 days of day -1/0 data to calibrate against.
+    # After Round 1 opens (Apr 14): analyse price process (mean-reverting vs trending),
+    # run the same OBI / trend-signal pipeline as Tomatoes if drift is present.
+    def trade_moon_rocks(self, state: TradingState, depth: OrderDepth, data: dict) -> List[Order]:
+        if not depth.buy_orders or not depth.sell_orders:
+            return []
+
+        bb = max(depth.buy_orders.keys())
+        ba = min(depth.sell_orders.keys())
+        pos = state.position.get("MOON_ROCKS", 0)
+        limit = 79  # 79 not 80 for queue priority
+        buy_cap = max(0, limit - pos)
+        sell_cap = max(0, limit + pos)
+        orders: List[Order] = []
+
+        spread = ba - bb
+        if spread >= 3:
+            bid_px = bb + 1
+            ask_px = ba - 1
+        else:
+            bid_px = bb
+            ask_px = ba
+
+        # Safety: never cross
+        if bid_px >= ask_px:
+            bid_px = bb
+            ask_px = ba
+        if bid_px >= ask_px:
+            return orders
+
+        if buy_cap > 0:
+            orders.append(Order("MOON_ROCKS", int(bid_px), int(buy_cap)))
+        if sell_cap > 0:
+            orders.append(Order("MOON_ROCKS", int(ask_px), -int(sell_cap)))
+
         return orders
 
     # -----------------------------
@@ -248,12 +305,14 @@ class Trader:
         bid_size = base_size + max(0, bias)
         ask_size = base_size + max(0, -bias)
 
+        # Mild inventory penalty: reduced from 0.60→0.35 to keep fill volume high.
+        # merged wins by never penalizing; 0.35 is a compromise.
         if pos > 0:
-            bid_size -= int(abs(pos) * 0.60)
-            ask_size += int(abs(pos) * 0.20)
+            bid_size -= int(abs(pos) * 0.35)
+            ask_size += int(abs(pos) * 0.15)
         elif pos < 0:
-            ask_size -= int(abs(pos) * 0.60)
-            bid_size += int(abs(pos) * 0.20)
+            ask_size -= int(abs(pos) * 0.35)
+            bid_size += int(abs(pos) * 0.15)
 
         if directional > 0:
             bid_size += 10

@@ -1,0 +1,1283 @@
+
+for IMC Prosperity, my teammate has made an attempt at the training round. I want to attempt creating an algorithm to trade emeralds and toamtoes for the training round and want to take importan tinformation from previous contestants. My teammate Shriyans has made an algorithm that had low drawdown and was able to make a decent profit but I want to see if there is a way I can include his algorithm (included in 73159.py). I have also included the historic price data - can you analyse this data and depdening on it, find a way to maximise profits and decide how to execute trades - also look at Shriyans' logic and see how I can improve it to maximise sharpe and PnL. then create a file for this which i can then test on the Prosperity platform.
+
+The tutorial round zip file contians the historic data for emeralds and tomatoes orices and also the trading data. The other zip file contians Shriyan's straegy. We see some teams getting over 3K PnL but for some reason we cannot seem to get above 2518 each time. wer think that if the trader model were overfit, the PnL would be above 4K. 
+
+We want to be using pure market making strategies for this round. It is also worth noting that our position limit for both is 80 and cannot exceed this. Please create code that can get us to 3K and epxlain what to be doing differently. 
+
+Also please take a look at my chat history with cldue because each time I asked claude to help bring the PnL up it made false promises: https://claude.ai/share/fd00f0de-1ecb-4e26-a6a9-e61cbc5c2c4e
+
+
+I’m going through the price files and Shriyans’ bot first, then I’ll turn that into a testable strategy file. I’ll also check that Claude link for anything worth salvaging, but I’m not going to trust claims unless they line up with the data.
+
+First obvious issue: Shriyans’ code is too blunt. It often sends full-size orders at one price level using only top-of-book and, for tomatoes, sets fair value to the current mid, which kills edge unless there’s a predictable drift.
+
+The tomatoes edge is not “just market make around current mid.” The data has two usable effects: top-of-book imbalance pushes the next move, and deviation from a rolling mean pulls back. That means your fair value should move even while you stay passive.
+
+Thought for 4m 15s
+
+I went through the files and built you a cleaner market-making bot here:
+
+trader_mm_emeralds_tomatoes.py
+
+A few blunt points first.
+
+Shriyans’ bot is leaving money on the table because it does three weak things:
+
+it uses only top-of-book bid/ask and ignores order-book pressure
+for tomatoes, it sets fair value to the current mid, which is basically saying “I have no view”
+it often sends very large single-price orders, which is bad for fill quality and inventory control
+
+From the historical files, the useful structure looks like this:
+
+EMERALDS is basically anchored around 10000. The edge is not from forecasting a huge trend. It is from quoting around a stable anchor and using top-of-book imbalance to nudge fair value slightly.
+TOMATOES has actual movement. The two things that matter are:
+microprice / bid-ask imbalance helps with the next move
+distance from a rolling mean gives mean reversion
+
+So the better play is not “quote around current mid.” It is:
+
+fair value = anchor or EMA + microprice signal + mean-reversion signal - inventory penalty
+
+What I changed in the bot:
+
+keeps persistent state using traderData
+uses 10000 anchor for emeralds
+uses EMA-based fair value for tomatoes
+adjusts fair by microprice / top-of-book imbalance
+adds inventory skew so you stop getting stuck near the 80 limit
+separates:
+aggressive stale-quote taking
+passive inside-spread market making
+uses layered quotes instead of one huge blunt quote
+
+Why this should be better:
+
+higher Sharpe usually comes from smoother inventory handling, not just bigger size
+your old logic is too binary
+this version is still pure MM, but it has an actual view of where fair should be
+
+What to do differently when you test:
+
+compare this against Shriyans’ bot on both days
+look at:
+average inventory held
+final inventory
+number of fills
+PnL split by product
+if tomatoes still underperform, the first knobs to tune are:
+micro_coeff
+mean_revert_coeff
+passive_edge
+take_threshold
+
+My honest view: I cannot promise this gets you above 3k without running the Prosperity engine itself. Anyone who says “this will definitely do 4k” from just eyeballing the files is guessing. But this is a materially better structure than 73159.py, and it is much closer to how a decent training-round MM bot should be built.
+
+I also tried the Claude share link, but it was not accessible from here.
+
+The main takeaway is simple: for this round, stop using “mid = fair” on tomatoes and stop blasting full-size quotes from a one-step rule. That is exactly how you cap yourself around mediocre PnL.
+
+where is teh file you created?
+Thought for a second
+
+Here:
+
+trader_mm_emeralds_tomatoes.py
+
+If that link does not open in your app, tell me and I’ll paste the full code directly.
+
+so this is good but again it doesn'tpush the 2518 that I said. Someone who got above this amount told me that the best way to increase PnL is to increase the number of passive fills. they mentioned penny jump the best level and then seeing where the most passive fills come from. majprity of PnL comes from optimising the passive fills. After running backtesting on differnt files, these are the results I got:
+
+More volume through the spread = more PnL captured, simple as that. The sophistication of EMA fair value, micro-price adjustments, and mean-reversion terms in trader_mm doesn't compensate for the ~3–4× difference in fill volume.
+trader_mm is a professionally structured market maker — EMA + micro-price + mean-reversion + inventory skew is the right architecture — but its parameter choices are too conservative for this market. The passive_edge of 5–6 ticks and join_size of 18–20 are intentionally limiting volume. If you want it to be competitive on mean PnL, you'd need to increase join_size toward 50–70 and possibly tighten passive_edge, accepting more variance. As-is, it's the right strategy if you prioritise consistency over expected value.
+
+bearing this in mind can yoy make new code please?
+
+
+I’m reworking it toward a more aggressive pure-MM shape: tighter quotes, more penny-jumping, bigger passive size, and less “cleverness” that’s throttling fills. The main risk is inventory blow-up, so I’m keeping only enough control to stop it from becoming reckless.
+
+The spread/fill comment you got is basically right. Your previous bot was “correct” in structure but too polite for this market. I’m checking the book stats now so I can push size harder without blindly pinning you at ±80 all the time.
+
+Thought for 1m 28s
+
+Yes. I made a more aggressive version here:
+
+trader_mm_aggressive_passive.py
+
+What changed from the last one:
+
+much larger front quote sizes
+emeralds: join_size = 58
+tomatoes: join_size = 54
+always tries to penny-jump the touch when the spread is wide
+fair value is still used, but only to nudge quotes by about 1 tick, not to scare the bot away from the spread
+inventory control is weaker in the middle and only gets strong near the limits
+still has a second passive layer for extra fills
+stale-quote taking threshold is lower, so it grabs obvious edge more often
+
+Why this should be closer to what you want:
+
+the previous bot was throttling itself
+this one is built to win queue priority and get hit/lifted more often
+it is still market making, just much less conservative
+
+The core idea is:
+
+in this training market, the spread is usually wide enough that being first inside by 1 tick matters more than having a slightly fancier fair value
+so this bot treats fair value as a small bias, not the main driver
+
+What to test next:
+
+compare this directly against the previous file on the same backtest set
+watch:
+passive fill count
+average signed inventory
+PnL by product
+if it still sits below 3k, the next knobs to push are:
+raise join_size into the low 60s
+reduce the inventory penalty even more
+make the back layer larger on tomatoes
+
+My blunt view: the most likely path above your current ceiling is exactly what you were told — optimize passive fills, not model sophistication. In this round, your old bot was too “smart” in the wrong way.
+
+one team did manage to gwt nearlz 3K PnL and thez outlined their strawtegz here I think.otherwise, I still couldnät get past 2400 with zour strategz.
+
+Spoofing signal in TOMATOES
+
+I ran some analysis on the L2/L3 order book and found that fake buy walls (large bids in L2/L3) predict a price DROP ~96% of the time (~3pts in 5 ticks), and fake sell walls predict a price RISE ~97% of the time. The statistical significance is insane (p-value ~10⁻⁵⁶). But when I tried to actually monetize this — whether through aggressive taking against the spoof or adjusting my making quotes — the PnL impact was basically zero because the expected move (~3pts) is smaller than the half-spread (~7pts). Has anyone found a way to actually profit from this signal, or is it one of those "looks amazing on paper but useless in practice" things?
+
+Overfitting to the final price move
+
+I noticed that a big chunk of my TOMATOES PnL comes from being accidentally long when the price happens to rally at the end of the day. My market maker naturally accumulates long inventory over time (more NPC sells hitting my bid than NPC buys lifting my ask), so my PnL curve basically tracks the price. If the final move had been down instead of up, my PnL would tank. Is this something others are seeing too? It feels like a lot of the backtest PnL is just luck on the terminal price rather than actual alpha. Curious how people are thinking about this.
+Image
+Image
+Image
+Capturing Large Fills vs Partials
+Looking at the leaderboard, some top entries have massive average fill sizes. Looking at the CSV data, I see NPC liquidity often sits around 15-30 units per level. However, when I quote passively, I frequently only get hit for small partial fills (my current avg fill is sitting at ~4.32) before the price moves away, or I get fully filled only right before getting run over by a toxic trend. For those with high average fill sizes: is this usually achieved by aggressively taking those 20+ lot levels, or is there a trick to getting fully filled on the passive side without absorbing toxic flow?
+
+Would love to hear anyone's thoughts on any of these. Just trying to understand the game better! 🙏
+Image
+
+
+then the conversation continued:
+The expected move from tomato spoofing was too small relative to spread and fill friction from what I saw, we did notice it too. We instead used it to nudge our fair val
+100% agreed, we hit the exact same math wall lol. The signal is beautiful but the spread friction just eats it alive.
+
+We tried nudging our fair value too, but since the half-spread is so wide (~7 pts), a small nudge just leaves your passive quotes buried deep in the book with no fills.
+
+Did you guys nudge it hard enough to penny the best bid/ask and actually force a fill? Or was it mostly just a defensive tweak to avoid getting run over by toxic flow?" 
+Mostly defensive. We tried pushing it a bit harder, but once the nudge got big enough to matter for fills, it started turning into an inventory/execution issue
+
+ur not gonna make as much from just market taking
+majority is from optimizing ur passive fills
+
+Thought for 4m 26s
+
+Made a new file here:
+
+trader_mm_passive_fill.py
+
+This version is much closer to the logic you just described.
+
+What it does differently:
+
+prioritises passive fill count over fancy fair-value movement
+penny-jumps inside the spread whenever possible
+posts large front sizes by default
+uses the tomatoes L2/L3 spoof signal mostly as a defensive/asymmetric quoting signal
+keeps a token quote on the weak side instead of vanishing entirely
+adds a second passive layer for extra volume
+only uses small aggressive takes when the book looks obviously stale
+
+The main tomatoes change is important:
+
+I am not trying to monetize spoofing by crossing the spread
+I use it to decide which side should be bigger / more protected
+that matches what the near-3k team said, and it avoids the “great signal, useless after friction” trap
+
+Bluntly, your earlier ceiling makes sense:
+
+the previous bots were still too conservative
+they were using signal to move fair, instead of using signal to improve where size sits
+in this round, that loses fills
+
+What to test first:
+
+compare this against the aggressive passive version
+specifically log:
+passive fill count
+average fill size
+average absolute inventory
+tomatoes PnL separately
+
+If this still stalls below your target, the next changes I’d make are:
+
+increase tomatoes base_size from 60 to about 66–70
+reduce the weak-side token quote rule slightly
+make the second layer larger on tomatoes only
+
+One thing I would not do is trust the spoof signal enough to turn this into a taker bot. The math you pasted already says that is a bad trade. The real use is avoiding bad passive fills while still farming the spread.
+
+the best strategy for ths trial round might be to look at IMC Proosperity3's actual first round since they are really really similar. Look at what the winners did for the first round. Look at what techniques they employed because they had two assets very similar to tomatoes and emeralds - int eh sense that they jjust needed to use market making techniques mostly. Take a look at https://github.com/CarterT27/imc-prosperity-3/tree/main/notebooks (round 1 for them was assets squid ink, rainforest resin and kelp)
+
+Also look through the following tram repos and see what strategies they employed for round 1:
+
+
+9th place: https://github.com/CarterT27/imc-prosperity-3
+10th place: https://github.com/YBansal95/imc-prosperity-3
+19th place: https://github.com/JackRao123/prosperity-crushers
+24th place: https://github.com/awatatani/imc-prosperity3-trading
+25th place: https://github.com/jmerle/imc-prosperity-3
+Thought for 1m 38s
+
+Yes — looking at Prosperity 3 Round 1 is the right move. The products map pretty cleanly:
+
+RAINFOREST_RESIN ↔ EMERALDS: fixed-anchor MM around 10000.
+KELP ↔ TOMATOES: mostly MM with a better fair-price estimate from the book, not a pure directional predictor.
+SQUID_INK is not the analogue you should copy for tomatoes; most top teams treated it as a separate volatile/signal product.
+
+The useful part is what the strong teams consistently did for the stable and semi-stable assets.
+
+What the top P3 teams actually did
+
+CarterT27 (9th)
+They say Round 1 Kelp was a market-making strategy that identified large bids and asks from consistent market makers, tracked their mid-price as fair value, then placed limits around that with some opportunistic taking. Resin was just hardcoded fair value at 10000.
+
+YBansal95 (10th)
+Same pattern. Resin was static-value MM at 10000 with selective taking and passive rebalancing. Kelp used volume frequency distributions / reliable quoted sizes to filter the book and derive a more realistic fair price, then mixed passive MM with some aggressive taking when wide.
+
+Their actual Round 1 code supports that:
+
+Resin hardcodes 10000 and takes obvious mispricings, then posts passive orders just inside the next fair-side levels.
+Kelp also posts around a computed fair and then places passive buy/sell orders one tick inside filtered book levels.
+
+jmerle (25th overall, but very strong Round 1 after rerun)
+His code is dead simple:
+
+generic MM framework
+buy anything below fair-1
+sell anything above fair+1
+otherwise post at/just inside those fair boundaries
+Resin true value is fixed at 10000 unless the mid is way off
+Kelp true value is just the mid-price.
+
+That matters because it shows something important: you do not need a fancy predictive model to do well on the “emeralds/resin” type product. Clean execution is enough.
+
+awatatani (Top 25 / Top 7 US)
+Their notebook is probably the most relevant to your problem. They explicitly argue:
+
+Resin fair is 10000
+for semi-stable products, the platform’s fair can often be approximated from max-volume bid / max-volume ask
+joining an existing best queue was worse than beating it by one tick in their analysis
+they preferred scalping / pennying over sitting behind size in queue.
+
+That last point is the big one for you.
+
+The actual takeaway for your training round
+
+Your earlier bots were too focused on “better fair value.” The P3 repos say the bigger edge is:
+
+1. EMERALDS should be brutally simple
+
+fixed fair = 10000
+take any ask below fair and any bid above fair
+otherwise penny-jump as close to fair as possible
+use inventory only to skew size, not to move quotes miles away.
+
+If your EMERALDS logic is doing anything more complicated than this, it is probably wasting fills.
+
+2. TOMATOES should use a filtered fair, not raw mid
+The P3 winners repeatedly used the idea of filtering the book by reliable / larger quotes before computing fair for Kelp.
+
+For your tomatoes, that means:
+
+do not use plain top-of-book mid
+do not overreact to L2/L3 spoofing
+compute fair from something like:
+best price among quotes with size above threshold, or
+max-volume bid / max-volume ask, or
+weighted average of “real” quote levels only
+
+That lines up with the spoofing issue you found: the signal is real, but spread friction kills direct monetization. So use it as a small fair nudge / side-weighting signal, not as a taker signal. That also matches what the other team told you.
+
+3. Pennying beats queue-sitting
+This is the clearest transferable lesson. awatatani’s notebook explicitly says joining the queue was worse than stepping ahead by a tick.
+
+That matches what you were told about passive fills:
+
+more queue priority
+more full fills instead of scraps
+less dependence on luck from terminal inventory
+
+So for both EMERALDS and TOMATOES, the default should be:
+
+if spread allows, quote one tick inside
+only join existing best when you cannot improve the level
+keep larger front size on the preferred side
+
+4. Inventory should affect size first, price second
+The top-round logic I saw is mostly:
+
+keep quoting
+reduce/shift size when inventory is stretched
+only use wider rebalancing quotes as a secondary mechanism.
+
+Your earlier versions probably widened too much when inventory built up, which kills the exact passive fills you need.
+
+What I think you should do now
+
+For your tutorial round bot, the right design is:
+
+EMERALDS
+
+fair = 10000 always
+take stale mispricings immediately
+otherwise penny-jump best bid/ask around fair
+use very large passive size
+only mildly skew for inventory until around |pos| > 50
+
+TOMATOES
+
+fair = filtered book fair, not naive mid
+filtered fair should use bigger / reliable book levels
+spoofing signal should only:
+slightly bias fair
+increase size on the “safe” side
+decrease size on the toxic side
+default behavior should still be aggressive passive MM, not prediction
+The blunt conclusion
+
+The main thing you were missing is not some hidden overfit alpha. It is this:
+
+The best analogues from Prosperity 3 did not win Round 1 by being clever. They won by being cleaner at passive market making.
+
+That means:
+
+fixed-anchor MM for EMERALDS
+filtered-fair MM for TOMATOES
+penny-jumping over queue-joining
+size-heavy front quotes
+only small, friction-aware use of signals
+
+That is much more likely to get you from ~2.4–2.5k toward 3k than piling on more EMA/microprice terms.
+
+I can now turn this into a new submission file built specifically around:
+fixed-anchor EMERALDS + filtered-fair TOMATOES + penny-jump priority + large passive size + spoof-defensive skew.
+
+yes please
+Thought for 3m 39s
+
+Done.
+
+File:
+trader_mm_p3_style.py
+
+This one is built around the Round 1 pattern top teams used in Prosperity 3:
+
+EMERALDS treated like fixed-anchor resin at 10000
+TOMATOES treated like kelp with a filtered book fair from larger visible sizes
+default behavior is penny-jump passive MM
+the L2/L3 spoof effect is used defensively as a size skew, not as a crossing signal
+inventory control reduces size first, and only moves prices once position gets stretched
+
+The main change versus the earlier bots is that this one is much more serious about queue priority and passive volume, which is exactly the part the strong Prosperity 3 writeups emphasized for their stable and semi-stable Round 1 products.
+
+My honest view: this is closer to the right shape than the earlier versions, but whether it breaks your ceiling depends on how your backtester handles fills. The next thing to tune, if needed, is not more prediction. It is:
+front size, weak-side token size, and how early inventory starts leaning.
+
+Run this first and tell me the exact PnL plus average position by product.
+
+I ran this and it still gave the same result of 2.518K PnL
+Thought for 3m 45s
+
+That tells me something important: the ceiling is probably not “we still need a smarter fair value.”
+
+If multiple very different market-making bots keep landing at basically 2.518k, then one of these is true:
+
+your backtest path has a real pure-MM ceiling around there
+your simulator is rewarding mostly the same quote levels, so changing logic without changing actual posted prices does almost nothing
+the bots need to become inventory-biased, not just “better passive MM”
+
+So I made a version that is actually different in shape, not just another mild tweak.
+
+File:
+trader_mm_inventory_bias.py
+
+What is different this time:
+
+EMERALDS is stripped back to a blunt anchor-MM around 10000
+TOMATOES uses:
+filtered fair from stronger visible levels
+the L2/L3 spoof signal as an inventory target
+big one-sided passive size when spoofing is strong
+it does not try to monetize spoofing by crossing the spread
+it tries to sit with the “right” inventory while still being passive-first
+
+Why this one is worth testing:
+
+your previous bots mostly changed fair value logic
+this one changes the actual behavior that matters:
+which side gets size
+whether you carry long/short inventory intentionally
+how hard you lean when spoofing is strong
+
+Bluntly, if this also comes back at about 2.518k, then I would stop pretending the answer is “one more market-making tweak.” At that point the evidence says:
+
+pure market making on the public training data is capped around that level, and the teams above it were probably getting there from one of these:
+
+simulator-specific fill exploitation
+inventory carry that is no longer really neutral MM
+overfitting to path-level drift / terminal mark
+
+That is exactly why “just optimize passive fills” can turn into fake advice. It is true up to a point, but after that, you hit the same ceiling.
+
+The next step after this is not another generic MM rewrite. It is to diagnose whether your backtester is collapsing distinct strategies into the same fills. If you want, send me:
+
+the PnL from this new file
+final positions by product
+average position by product
+passive fill count by product
+
+Then I can tell you whether the problem is the strategy or the simulator.
+
+the result appears to be the exact same - nothing has changed. this is not testing on the backtester - this is testing using IMC's actual verified backtester an it will use some similar test and trading data to get our finalised PnL. Is it possible to try overfitting instead as opposed to pure market makinh strategies - is that what other teams may be doing? or inventory carry that is no longer really neutral MM?
+Thought for 15s
+
+Yes. At this point, trying a deliberately path-biased / overfit version is reasonable.
+
+If the verified backtester keeps giving you essentially the same 2.518k across several quite different MM bots, then the clean conclusion is:
+
+your previous changes were not changing the executed orders enough
+or the round really has a pure-MM ceiling near there
+or the teams above that are not actually staying neutral and are benefiting from inventory carry
+
+That second paragraph you pasted is the giveaway. If tomatoes tends to reward being long over the day, then a “neutral” market maker is leaving money on the table. A top team may still describe it as market making, but in practice it can be:
+
+market making with a persistent long target
+asymmetric quoting so bids are stronger than asks
+slower unloading of longs
+only partial use of the short side
+
+That is not pure neutral MM anymore, but it is still plausible in a competition.
+
+I made that version here:
+
+trader_mm_overfit_longbias.py
+
+What this one does:
+
+EMERALDS stays simple anchor MM around 10000
+TOMATOES is intentionally long-biased
+it uses the L2/L3 spoof signal to adjust a target inventory, not just fair value
+when below target, it quotes bids more aggressively and keeps asks weaker
+it is willing to carry long inventory instead of constantly flattening
+
+This is the right test now, because it is actually testing the hypothesis:
+“The missing PnL is coming from inventory carry, not better neutral quoting.”
+
+Blunt warning:
+
+this may improve the public-style path
+it may also get wrecked if the hidden path is less upward-biased
+
+So the correct way to think about this is:
+
+pure MM = safer, probably capped
+inventory-biased MM = higher upside, more path-dependent
+full overfit to end-of-day drift = potentially best on similar data, worst on shifted data
+
+If this new file still lands at almost exactly 2.518k, then I would stop changing strategy logic and start suspecting one of these:
+
+your code changes are not materially affecting posted prices
+your product names / conditions are not triggering the way you think
+the simulator is filling you in a way that collapses many bots to the same result
+
+If you run this one and it still barely moves, send me just:
+final PnL, tomatoes PnL, final tomatoes position, and whether it spent most of the day long or flat. That will tell us very quickly whether the ceiling is real or whether the strategy is not biting. 
+
+it is actjally showing the exact same result!! Given this is IMC Prosperity I think it is unlikely that there is a problem with their platform - it could be that the simulator is filling in a way that collapses many bots to the same result. the graph is literally the exact same and I have no idea now.
+Thought for 1m 17s
+
+Yes. If the graph is literally identical, stop tweaking strategy for a moment.
+
+That is not normal.
+
+There are only a few realistic explanations:
+
+Your submissions are not materially changing executed orders
+The verifier is effectively collapsing many MM variants into the same fills
+Your new files are not actually being used the way you think
+
+I do not think the right next step is “more overfitting” yet. First you need to prove the platform is reacting to your code at all.
+
+I made two sanity-check files:
+
+trader_sanity_do_nothing.py
+trader_sanity_pathological.py
+
+What to do:
+
+submit do nothing
+submit pathological
+compare the graph
+
+Expected result:
+
+do nothing should give a dramatically different graph, probably near zero
+pathological should also give a very different graph, probably awful
+
+If either of those still gives you the same 2.518k curve, then this is not a strategy problem. It means one of these:
+
+the platform is reusing an old submission
+you are uploading the wrong file
+the verifier is not reading the new code you think it is
+there is some submission-format issue causing fallback behavior
+
+That is the first thing to test. Do not waste more time “improving alpha” before checking this.
+
+Why I’m saying this bluntly:
+
+we already tried several structurally different bots
+neutral MM, aggressive MM, filtered fair, inventory bias, long bias
+exact same curve across all of them is a huge red flag
+
+If the sanity files produce different curves, then fine, the platform is working and the conclusion becomes:
+
+the tutorial environment is probably dominated by a very narrow fill mechanism
+many MM bots converge to the same effective orders
+then overfitting / inventory carry may matter
+
+But if the sanity files also produce the same curve, your current problem is not trading logic.
+
+Run those two first and tell me the result. 
+
+so I ran these and they gave the results I expected 
+Thought for 16s
+
+Good. That rules out the obvious failure mode.
+
+So the situation is now much clearer:
+
+Your files are being executed, but your different MM bots are still collapsing to the same effective trades.
+
+That usually means one thing:
+your changes are continuous, but the simulator only cares about discrete actions.
+
+In practice, only these matter:
+
+did you take or not
+did you penny-jump, join, or sit back
+what integer price did you post
+what inventory sign did you carry
+
+A lot of the earlier bots changed fair value by a bit, but still ended up posting the same integer quotes most of the time. So the curve stayed the same.
+
+What I think now:
+
+pure neutral MM is probably genuinely capped around your current result
+small refinements are useless because they do not change the discrete orders
+the only remaining angle worth testing is coarse, path-dependent inventory carry
+
+So I made one more file that is actually different in a meaningful way:
+
+trader_mm_timecarry_overfit.py
+
+What this one does:
+
+EMERALDS stays simple
+TOMATOES is explicitly time-biased
+it builds a larger long target as the day goes on
+late in the day it becomes much more reluctant to sell
+quotes are shifted in whole ticks, not tiny fair nudges
+size is strongly one-sided when below target
+
+This is not “clean market making.”
+It is basically:
+market making + deliberate inventory carry + mild overfit to the training-day shape
+
+That is the right thing to test now, because the evidence is pointing that way.
+
+The key lesson here is blunt:
+your earlier strategies probably were not failing because they were bad. They were failing because they were all too similar after price discretization.
+
+So now the sensible plan is:
+
+Run this new file.
+Check whether the curve finally changes.
+If it does change, then the real lever is inventory carry, not better MM.
+If it still does not change much, then I would conclude the tutorial round’s verified environment is mostly rewarding a narrow set of top-of-book actions, and chasing 3k with “better strategy design” is mostly a dead end.
+
+If this new one still lands near the same result, then the next move is not another generic rewrite. It is to build a bot that is intentionally extreme in one dimension only, like:
+
+tomatoes long-only carry
+tomatoes bid-only for the last quarter
+tomatoes no-ask after a timestamp threshold
+
+That would tell us exactly which discrete behavior is binding. 
+
+Thought for 9s
+
+Good. That is actually useful.
+
+This proves three things:
+
+The platform is reading your code properly.
+The 2.518k bots were genuinely behaving very similarly in execution.
+Blind overfitting to long carry is not the answer — this last one was too directional and lost the spread engine that was making money.
+
+So the picture now is much clearer:
+
+Pure neutral MM gets you about 2.5k
+Heavy inventory carry / crude overfit collapses to about 0.8k
+therefore the winning zone is probably in between:
+still mostly passive MM
+but with controlled directional bias
+not full-time long carry
+not pure flat-neutral quoting either
+
+That is exactly what I would expect from a strong Round 1-style bot:
+
+stable spread capture
+slight inventory drift when the tape/book supports it
+then fast reversion toward neutral when the signal weakens
+
+The key mistake in the last test was this:
+
+it replaced MM with carry
+what you actually need is to layer carry on top of MM
+
+So the next version should be:
+
+What to change now
+
+For TOMATOES:
+
+keep your strong passive spread capture
+add only a small target inventory, something like:
+target = 0 normally
+target = +10 to +20 only when book conditions are favorable
+never go into “refuse to sell” mode unless the signal is very strong
+bias size first, then price by 1 tick max
+carry should be temporary, not structural all day
+
+For EMERALDS:
+
+leave it alone
+the simple anchor MM is probably already near optimal
+What I now think the better teams probably did
+
+Not:
+
+full overfit
+huge directional bets
+market taking everything
+
+More likely:
+
+excellent passive fill optimization
+penny-jumping
+maybe a small long bias in tomatoes
+maybe a state-dependent inventory target
+but still preserving the passive spread farming that gives the base 2.5k
+
+So the real target is probably:
+2.5k base MM + a few hundred from controlled inventory bias
+
+Not:
+replace 2.5k MM with a giant carry trade
+
+Best next bot shape
+
+You want a hybrid like this:
+
+baseline = your best passive MM
+overlay = small tomatoes inventory target
+only turn the target on when one or more are true:
+spoof signal strong
+filtered fair rising
+recent mids trending up
+cap target modestly, maybe +15 or +20, not +55
+late day, hold a bit more, but not “no asks”
+
+That is the sweet spot worth testing now.
+
+The latest run was not a failure. It was the cleanest evidence so far that:
+the extra PnL is likely coming from mild inventory bias, not from pure neutral MM and not from extreme overfit.
+
+I can build that hybrid version next.
+
+yes please
+Thought for a second
+
+Here:
+
+trader_mm_hybrid_bias.py
+
+This one keeps the profitable passive MM core, then adds only a small, state-dependent tomatoes carry overlay.
+
+What changed:
+
+EMERALDS stays basically the same simple anchor MM
+TOMATOES now:
+keeps passive spread capture as the base
+computes a mild score from:
+recent trend
+spoof signal
+filtered-fair vs EMA
+turns that into a small target inventory
+biases size first, then price by at most about 1 tick
+never goes into the stupid “just hold longs forever” mode that killed the last run
+
+This is the first version that is actually aiming for the middle ground:
+
+not pure neutral MM
+not reckless overfit carry
+MM + controlled directional lean
+
+Run this one next. The only thing that matters now is whether it moves you off that 2.518k plateau without wrecking the base spread engine. 
+
+can you make sometjing that definitively works??
+Thought for a couple of seconds
+
+No.
+
+Nobody can honestly guarantee a Prosperity bot will “definitively work” from the public tutorial data alone, especially when the verified evaluator may use similar but not identical paths.
+
+What I can say is this:
+
+a guaranteed 3k+ bot is not something I can truthfully promise
+your tests already showed that
+neutral MM clusters around 2.5k
+crude overfit carry is worse
+so the remaining edge is probably small, fragile, and path-dependent
+
+The blunt conclusion is:
+there probably is no magical clean strategy jump left. The teams above you were likely getting there through a narrow combination of:
+
+slightly better passive queue positioning
+a mild inventory lean
+some path-specific tuning that may not generalize
+
+So the best next move is not “make a perfect bot.”
+It is to run a proper parameter sweep over one stable template.
+
+The template I’d keep is:
+
+EMERALDS: simple anchor MM at 10000
+TOMATOES: passive MM core
+small inventory target overlay
+penny-jump whenever spread allows
+
+And then sweep only these:
+
+tomatoes front bid size
+tomatoes front ask size
+target inventory caps
+timestamp where late-day bias starts
+spoof/trend thresholds
+whether asks widen by 0, 1, or 2 ticks under bullish conditions
+
+That is how you find the last few hundred PnL, not by rewriting the whole bot again.
+
+So the honest answer is:
+I cannot make something that definitively works.
+What I can do next is build you one single clean parameterized bot with the key knobs exposed at the top, so you can systematically brute-force the small space that actually matters on the verified tester.
+
+There are teams getting 5K+ though
+Thought for a few seconds
+
+Then your current approach is missing something real.
+
+If teams are getting 5k+, that means at least one of these is true:
+
+they are not doing plain neutral market making
+they found a discrete execution exploit that your bots are not triggering
+they are using a stronger path-specific bias that still preserves passive fills
+they discovered a book feature that changes actual posted integer prices a lot, not just fair value a little
+
+And that matters, because it means your current 2.5k plateau is not “the game limit.” It is your strategy family’s limit.
+
+The big mistake now would be to keep making small refinements to the same family.
+
+What the 5k+ bots are probably doing is one of these:
+
+1. Asymmetric passive quoting
+Not “quote both sides well.”
+More like:
+
+one side is the real money-maker
+the other side exists mostly for inventory control
+size and quote distance are heavily asymmetric
+
+2. Regime switching
+Not one MM policy all day.
+More like:
+
+some periods are fill-farming
+some periods are inventory accumulation
+some periods are unload / defend
+hard timestamp or hard state transitions
+
+3. Structural overfit that still keeps spread capture
+Your crude carry test failed because it threw away the MM engine.
+A good overfit bot would do:
+
+passive MM most of the time
+but selectively turn into a biased accumulator under very specific conditions
+
+4. Queue-position exploitation
+The difference may come from exactly where they quote:
+
+always pennying one side, joining the other
+only quoting when spread is above a threshold
+cancelling weak-side quotes in toxic states
+using specific integer levels that get disproportionately filled
+
+5. A feature you are underusing
+The spoof/L2-L3 effect may still matter, but not as “fair value.”
+It could matter as:
+
+whether to quote at all
+which side gets full size
+whether to penny or sit one level back
+
+So yes — if people are at 5k+, then there is almost certainly a more aggressive and more path-specific strategy than what we have tested.
+
+But I am not going to lie to you: I still cannot promise a bot that “definitively works.” What I can say is the search space should change completely.
+
+You should stop testing “better general market makers” and start testing sharply different archetypes:
+
+bid-dominant tomatoes MM
+ask-dominant tomatoes MM
+tomatoes only quote one side when spoof signal is strong
+time-switched bot: neutral early, biased mid, flatten late
+quote gating bot: only quote when spread and book shape meet exact conditions
+inventory-target bot with hard discrete states
+
+That is how you find a 5k bot: not prettier theory, but a strategy that behaves materially differently.
+
+The most likely truth is:
+top teams are overfitting, but not stupidly.
+They are overfitting the execution regime, not just predicting direction.
+
+The next useful step is for me to build you a regime-switching tomatoes bot that is intentionally much more discontinuous:
+
+neutral passive MM in normal state
+aggressive one-sided passive accumulation in bullish state
+defensive / reduced quoting in bearish-toxic state
+
+That is far more likely to uncover the missing edge than another smooth fair-value model.
+
+this is the result. i genuinely have no idea how other poeple are getting 5K+
+Thought for 4s
+
+At this point, I do not think you are “one tweak away.”
+
+Your results are telling a pretty clear story:
+
+the 2.5k bot family is strong passive MM
+the 0.8–1.0k bot family is biased carry done badly
+so the 5k+ bots are probably not just better versions of your current MM
+they are probably doing something structurally different
+
+The most likely explanations are:
+
+1. They found a very specific discrete quoting rule
+Not better fair value. Not better EMA.
+Something like:
+
+only quote when spread is at least X
+penny only one side, not both
+cancel weak-side quotes in toxic states
+sit at a weirdly specific integer offset that gets filled a lot
+
+That would explain why your smooth strategy changes did almost nothing.
+
+2. They are not really “market making” in the neutral sense
+A lot of people say “market making” when they actually mean:
+
+one-sided passive accumulation
+weak inventory control
+timed carry
+selective unload
+
+Your results show full carry is bad, but small carry layered into the right execution regime could still be huge.
+
+3. They are exploiting fill mechanics
+This is the most important possibility now.
+If fills are simulator-specific, then the edge may come from:
+
+queue priority
+not quoting when you are likely to be adversely selected
+quoting much larger at the right moments
+choosing one side to dominate
+
+That is not a pricing problem. It is an execution problem.
+
+4. They are overfitting the path, but in a smarter way
+Not “always be long.”
+More like:
+
+state A: spread farming
+state B: accumulate
+state C: stop quoting one side
+state D: unload
+
+Your current bots are too continuous. A winning bot may be much more binary.
+
+So the honest answer is:
+you do not currently understand the fill game well enough, and neither do I from just these outcomes.
+
+That is not an insult. It is just the obvious conclusion from the plateau.
+
+What I would do next
+
+Stop trying to design the “best overall bot.”
+Start running diagnostic bots that isolate one behavior.
+
+You need to answer these questions:
+
+Is tomatoes profit mostly coming from bids or asks?
+Is the best edge from always pennying or only pennying under some spreads?
+Does quoting both sides hurt compared with quoting mostly one side?
+Does the big money come from specific times of day?
+Does the spoof signal help by deciding whether to quote, not by moving fair?
+
+Those questions matter more than another polished hybrid strategy.
+
+The five bots I would test now
+
+Not to win directly. To identify the mechanism.
+
+Bot A: bid-dominant tomatoes
+
+strong bids
+token asks
+emeralds unchanged
+
+Bot B: ask-dominant tomatoes
+
+mirror image
+
+Bot C: quote-gated tomatoes
+
+only quote when spread >= threshold
+otherwise do almost nothing
+
+Bot D: spoof-gated tomatoes
+
+if spoof bullish, strong bid / weak ask
+if spoof bearish, strong ask / weak bid
+if neutral, small passive MM
+
+Bot E: time-regime tomatoes
+
+early neutral
+mid aggressive one-sided
+late flatten or late hold
+
+After that, you do not compare just total PnL.
+You compare shape:
+
+when the curve rises
+when it stalls
+when it gets run over
+
+That tells you where the 5k bots live.
+
+My blunt guess
+
+The 5k bots are probably doing something like:
+
+emeralds: simple anchor MM
+tomatoes:
+very aggressive passive quoting
+strongly asymmetric sizes
+one-sided preference in certain states
+hard gating to avoid toxic fills
+only light use of fair value
+
+So yes, your confusion makes sense.
+You are looking for a “better pricing model,” but the winning bots are probably closer to a better execution state machine.
+
+If you want, I’ll build those five diagnostic bots as separate files so you can identify exactly which behavior is producing the missing edge.
+
+thank you, those diagnostic bots would be heplful. after doing each one i can send you a PnL graph. I just wish there were a faster way to do this!
+Thought for a second
+
+Yes — and there is a faster way than randomly tweaking one bot at a time: run a small set of orthogonal diagnostic bots that each isolate one mechanism.
+
+Files:
+
+trader_diag_A_bid_dominant.py
+trader_diag_B_ask_dominant.py
+trader_diag_C_quote_gated.py
+trader_diag_D_spoof_gated.py
+trader_diag_E_time_regime.py
+
+What each one is testing:
+
+A — bid-dominant tomatoes
+Strong bids, token asks. This tells us whether the big edge comes from being a buyer most of the time.
+
+B — ask-dominant tomatoes
+Mirror image. This tells us whether your current intuition about long bias is just wrong.
+
+C — quote-gated tomatoes
+Only really quotes when spread is wide enough. This tests whether top teams are making money by avoiding bad low-spread states rather than quoting all the time.
+
+D — spoof-gated tomatoes
+Uses the L2/L3 effect to decide side dominance. This tests whether spoofing is useful as a quoting-state filter rather than as a fair-value predictor.
+
+E — time-regime tomatoes
+Neutral early, bid-dominant mid, softer/flattening late. This tests whether the day has distinct execution regimes.
+
+How to use them efficiently:
+
+run all five
+send me the five PnL graphs
+also tell me just the final PnL for each
+
+Then I can tell you which dimension is actually driving edge, and we stop guessing.
+
+The fastest route now is not “one perfect strategy.”
+It is:
+identify the winning regime first, then optimize inside that regime. 
+
+i think it is as bit slow to run these on the official IMC backtester ecah time, so is it ok if I run it on Kevin Fu's IMC prosperity4 backtester?
+Thought for 6s
+
+Yes — for screening and ranking ideas, that is fine.
+
+But do not trust it as the final truth.
+
+Use it like this:
+
+use Kevin Fu’s backtester to quickly compare bots against each other
+only keep the top few candidates
+then run those on the official IMC verifier
+
+What you should care about:
+
+relative ranking of bots, not absolute PnL
+whether one bot clearly beats another across multiple files
+whether the curve shape changes in the same way
+
+What can go wrong:
+
+fill logic may differ
+queue handling may differ
+partial fills may differ
+hidden assumptions in the simulator may reward different quoting behavior
+
+So a bot that looks amazing on Kevin’s backtester might be mediocre on IMC’s official one.
+
+The right workflow is:
+
+use Kevin’s backtester for fast iteration
+eliminate obviously bad archetypes there
+verify only the strongest few on IMC
+
+Bluntly, that is the only sensible way to move faster now.
+
+When you test the five diagnostic bots, what matters most is:
+
+which one wins on Kevin’s backtester
+whether that same one still looks strongest on IMC
+
+If the ranking stays similar, great. If the ranking flips, then the simulator difference is big, and you should trust IMC much more.
+
+I have the following intel from the discord server thart I am on, can you tell me if this is any new useful information:
+
+_maverick_05: "2518 is baseline. Improved by 50–100 with pure MM. Hit 3.1–3.2k if you find macro patterns — but I doubt there are real ones." Also: "You need to work on inventory management beyond the basic strat"
+tatarrattat: "Majority is from optimizing passive fills. You don't have to take. Penny the best level — that's where the most passive fills come from."
+johnpork: "2.9–3k is the theoretical limit without hardcoding/overfitting"
+oatalicious: "Focus on 1) robust tooling, 2) robust strategy. Do NOT chase test set PnL"
+Trend/drift:
+
+hallo.there asked MarkBrezina about picking a rolling window for drift. His answer: "There is no single good window — 10 gets a short-horizon idea, 100/1000 gives longer and longer horizon"
+Thought for a second
+
+Yes. There is some useful signal there, but most of it confirms what your tests already showed.
+
+What is actually useful:
+
+1. “2518 is baseline”
+This is the biggest confirmation. It matches your results almost perfectly. So your repeated ~2.5k is not random failure. It is the standard ceiling for basic neutral MM.
+
+2. “Improved by 50–100 with pure MM” / “2.9–3k theoretical limit without overfitting”
+That is also useful. It suggests:
+
+squeezing more from pure MM is possible
+but the gain is probably small
+so chasing 5k with just cleaner neutral MM is probably nonsense
+
+That lines up with what we saw:
+
+your neutral/MM-ish bots sit near the baseline
+your crude overfit bots got worse
+so the realistic clean upside is probably only a few hundred
+
+3. “Majority is from optimizing passive fills. Penny the best level.”
+This matters, but you already knew it. The useful part is not the slogan. The useful part is the implication:
+
+queue priority is likely more important than better fair value
+the key variable is probably exact discrete quote placement
+not whether your fair is 0.8 ticks better
+
+So yes, it supports the idea that winners are exploiting execution mechanics, not just prediction.
+
+4. “Work on inventory management beyond the basic strat”
+Also useful, but only in a narrow sense. Your tests suggest:
+
+neutral MM alone gets baseline
+extreme carry is bad
+so the missing edge is probably inventory management that is subtle, not dramatic
+
+That means:
+
+size asymmetry
+slight leaning
+selective reluctance to quote one side
+state-based inventory targets
+
+Not:
+
+“always be long”
+
+5. “No single good drift window”
+This is true but not game-changing. It tells you drift is multi-horizon, which is normal. The problem is that in your setting, a generic drift model has not yet translated into actual extra PnL. So this is more of a modeling reminder than a breakthrough.
+
+What is not especially new:
+
+“I doubt there are real macro patterns”
+“Do not chase test set PnL”
+
+These are sensible, but they do not help you crack the tutorial round. In fact, if people are getting much higher scores, somebody probably is exploiting path-specific behavior, whether they admit it or not.
+
+My honest read of this intel:
+
+2518 baseline: very credible and important
+pure MM can reach maybe 2.9–3.2k: plausible
+5k+ is probably not clean pure MM: extremely likely
+the real lever is passive execution + nuanced inventory management: likely true
+
+So yes, this gives you one strong new conclusion:
+
+Stop expecting a massive jump from better neutral MM.
+The ceiling for honest pure MM is probably somewhere around high-2k to low-3k.
+
+That means your search should split into two tracks:
+
+Track A: try to push toward ~3k with better passive execution and subtle inventory control
+Track B: separately test whether the 5k bots are using more explicit overfit/state-machine behavior
+
+That Discord intel makes the situation less mysterious, not more:
+
+your 2.5k is baseline
+pure MM improvements are marginal
+bigger gains likely come from more path-specific behavior
+
+So yes, it is useful, mainly because it confirms you were not crazy: the plateau is real.
+
+is it useful in what it says for inventory managemtn?
+Thought for a second
+
+A bit, but not much.
+
+“Work on inventory management beyond the basic strat” is directionally right, but it is too vague to be actionable on its own.
+
+What it does usefully imply:
+
+basic “inventory skew” is not enough
+the edge is probably in how you manage inventory, not just whether you do
+the good version is likely:
+size asymmetry first
+price skew second
+state-dependent targets
+not flattening too aggressively
+not carrying huge directional inventory either
+
+What it does not tell you:
+
+when to lean
+how much inventory to hold
+whether to manage inventory off trend, spoofing, spread width, or time of day
+whether the best control is on bids, asks, or both
+
+From your own results, the inventory lesson is already clearer than the Discord message:
+
+neutral MM gives you the baseline
+big carry / crude overfit is bad
+so the useful inventory management zone is probably:
+small target positions
+temporary leaning
+stronger on one side only in certain states
+reverting back before inventory becomes toxic
+
+So yes, it is useful in one sense:
+it confirms that inventory management is likely where the extra edge lives.
+
+But no, it is not useful in a detailed sense:
+it does not tell you the actual mechanism.
+
+The practical takeaway is this:
+
+Bad inventory management:
+
+flatten constantly
+or hold huge long/short positions
+or widen both sides whenever position moves
+
+More promising inventory management:
+
+keep the passive MM engine alive
+only lean inventory when a state is favorable
+control inventory mainly through quote sizes
+move prices only by 1 tick
+let inventory drift a bit, but cap it well before it becomes a real bet
+
+So the Discord advice is not worthless, but it is mostly a signpost, not a solution. The real answer still has to come from your diagnostic tests.
+
+so cna you try some useful inventory management by small target positions and temporary leaning?
+
+I’m going to make this deliberately narrow: keep the baseline MM intact, then add only small target inventory and temporary leaning on tomatoes, with size changes doing most of the work. That should test the inventory idea without wrecking the spread capture again.
+
+Thought for a few seconds
+
+I hit a tool reset while writing the file. I’m recreating the same bot now; the logic itself is unchanged. 
+
+Yes — here is a version built exactly around small target positions + temporary leaning:
+
+trader_mm_small_target_lean.py
+
+What it does:
+
+EMERALDS stays as simple anchor MM around 10000
+TOMATOES keeps the passive MM core
+adds a temporary lean state:
+bullish
+neutral
+bearish
+the lean only turns on when multiple weak signals agree
+recent short trend
+spoof signal
+filtered fair vs EMA
+when triggered, it only targets about ±8 to ±16 inventory
+the lean decays over time instead of persisting forever
+it leans mainly through size asymmetry
+price skew is only about 1 tick
+
+This is much closer to the kind of inventory management that could plausibly help:
+
+not constant flattening
+not huge carry
+not abandoning the MM engine
+
+What I’d look for when you test it:
+
+whether the PnL moves off the 2.518k plateau
+whether tomatoes spends time in small positive or negative inventory, rather than hugging zero or exploding
+whether the curve still keeps the stable MM shape instead of turning into a noisy directional bet
+
+If this also does nothing, that is useful too: it would mean even subtle inventory leaning is not enough, and the 5k bots are probably exploiting a more discrete execution/state-machine trick. 

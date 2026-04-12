@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python tools/discord_reader.py --dir tools/exports/ --channel algo-trading --since 2026-04-10 --limit 200 --no-bots --search \"MOON_ROCKS\")",
+      "Bash(python tools/discord_reader.py --dir tools/exports/ --channel algo-trading --since 2026-04-10 --limit 500 --no-bots --search \"moon\")",
+      "Bash(python tools/discord_reader.py --dir tools/exports/ --channel general --since 2026-04-01 --limit 500 --no-bots --search \"moon\")",
+      "Bash(python tools/discord_reader.py --dir tools/exports/ --since 2026-04-01 --limit 1000 --no-bots --search \"round 1\")",
+      "Bash(python tools/discord_reader.py --dir tools/exports/ --since 2026-04-01 --no-bots --search \"round 1\")",
+      "Bash(python -c \"import sys; lines=sys.stdin.readlines\\(\\); [print\\(l, end=''\\) for l in lines]\")",
+      "Bash(python -c ':*)",
+      "Read(//c/Users/rucha/.claude/projects/c--quant-hacks-imc-prosperity26/0a8bd valley-48ac-4bdc-a133-1a017d1ddcad/tool-results/**)",
+      "Read(//c/Users/rucha/.claude/projects/c--quant-hacks-imc-prosperity26/memory/**)",
+      "Bash(python backtester/backtester.py training-round/trader_mm_v2.py)",
+      "Bash(python prosperity2bt.py training-round/trader_mm_v2.py)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py -2 -1)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0 --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0 --no-out --print)",
+      "Bash(python -c \" import sys, re taker_fires = 0 spreads = [] for line in sys.stdin: if 'TAKER' in line: taker_fires += 1 m = re.search\\(r'SPREAD:\\(\\\\d+\\)', line\\) if m: spreads.append\\(int\\(m.group\\(1\\)\\)\\) print\\('taker fires:', taker_fires\\) if spreads: import statistics print\\(f'spread: mean={statistics.mean\\(spreads\\):.1f} min={min\\(spreads\\)} max={max\\(spreads\\)}'\\) \")",
+      "Bash(python -c \" import sys, statistics spreads, trends, combineds = [], [], [] for line in sys.stdin: parts = line.strip\\(\\).split\\(\\) for p in parts: if p.startswith\\('spread='\\): spreads.append\\(int\\(p.split\\('='\\)[1]\\)\\) elif p.startswith\\('trend='\\): trends.append\\(float\\(p.split\\('='\\)[1]\\)\\) elif p.startswith\\('combined='\\): combineds.append\\(float\\(p.split\\('='\\)[1]\\)\\) print\\(f'n={len\\(spreads\\)}'\\) print\\(f'spread: mean={statistics.mean\\(spreads\\):.1f} min={min\\(spreads\\)} max={max\\(spreads\\)} p50={sorted\\(spreads\\)[len\\(spreads\\)//2]}'\\) sp = sorted\\(spreads\\) for thresh in [2,3,4,5,6,8,10]: pct = sum\\(1 for s in spreads if s <= thresh\\) / len\\(spreads\\) * 100 print\\(f' spread <= {thresh}: {pct:.1f}%'\\) print\\(f'trend_signal: mean={statistics.mean\\(trends\\):.2f} max={max\\(trends\\):.2f} min={min\\(trends\\):.2f}'\\) for thresh in [0.3, 0.4, 0.5, 0.6]: pct = sum\\(1 for t in trends if abs\\(t\\) >= thresh\\) / len\\(trends\\) * 100 print\\(f' |trend| >= {thresh}: {pct:.1f}%'\\) print\\(f'combined: mean={statistics.mean\\(combineds\\):.2f} max={max\\(combineds\\):.2f} min={min\\(combineds\\):.2f}'\\) \")",
+      "Bash(python -m prosperity4bt ../../training-round/trader_multilevel_test.py 0 --no-out)",
+      "Bash(python backtester/imc-prosperity-4-backtester/prosperity4bt/main.py training-round/trader_mm_v2.py --days -2 -1)",
+      "Bash(python -m prosperity4bt training-round/trader_mm_v2.py --days -2 -1)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py --days -2 -1)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0 -2 -1)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0--2 0--1 --no-vis --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_merged.py 0--2 0--1 --no-vis --no-out)",
+      "Bash(python starter.py --help)"
+    ]
+  }
+}
