@@ -1,29 +1,4 @@
 """
-insider_tracker.py
-──────────────────
-Detects and follows the informed trader bot in IMC Prosperity.
-
-BACKGROUND
-──────────
-In every Prosperity round there is at least one internal bot with deterministic,
-repeatable behaviour that signals directional knowledge before the market moves.
-In Prosperity 3 the known insider was 'Olivia' (KELP, SQUID_INK).
-Frankfurt Hedgehogs (2nd place) found she consistently:
-  - bought at or near the daily low (long signal)
-  - sold at or near the daily high (short signal)
-
-Their detection was simple: scan market_trades + own_trades for
-trade.buyer == 'Olivia' or trade.seller == 'Olivia', track the most recent
-timestamps of each, and infer direction from whichever happened later.
-
-This module generalises that approach:
-  - configurable list of candidates to watch (update KNOWN_INSIDERS for P4)
-  - per-product per-insider state persisted via traderData
-  - a "follow window" — aggressively copy the insider for N timestamps after
-    their last observed trade, then fade back to neutral
-  - a position-following helper that returns orders to reach the insider's
-    implied target position
-
 HOW TO USE
 ──────────
 1.  Import InsiderTracker at the top of your trader.py.
