@@ -84,97 +84,33 @@ class Trader:
         bb, bv1, ba, av1, mid = book
         pos = state.position.get("TOMATOES", 0)
         limit = self.POSITION_LIMITS["TOMATOES"]
-        orders: List[Order] = []
 
-        # --- Level-1 imbalance ---
+        # --- Signal 1: L1 order book imbalance ---
         imb1 = self._imbalance(bv1, av1)
 
-        # --- L2/L3 spoof signal (positive = fake buy pressure = bearish) ---
+        # --- Signal 2: L2/L3 spoof signal ---
+        # Data analysis: combined signal fires 6% of ticks with 95-100% accuracy
+        # at both horizon=1 and horizon=10. Extremely predictive when active.
         bv2 = self._buy_vol(depth, 2)
         bv3 = self._buy_vol(depth, 3)
         av2 = self._sell_vol(depth, 2)
         av3 = self._sell_vol(depth, 3)
-        l23imb = self._imbalance(bv2 + bv3, av2 + av3)
-        spoof_signal = -l23imb  # positive -> bearish
+        spoof_signal = -self._imbalance(bv2 + bv3, av2 + av3)
 
-        # --- EMA fair value + macro drift detector ---
-        ema_key = "ema_tomatoes"
-        prev_ema = data.get(ema_key, mid)
+        # --- EMA for mean-reversion fair value ---
+        prev_ema = data.get("ema_tomatoes", mid)
         ema = 0.96 * prev_ema + 0.04 * mid
-        data[ema_key] = ema
+        data["ema_tomatoes"] = ema
 
-        # Very slow EMA (alpha=0.001, half-life ~693 steps ≈ 7% of a day).
-        # In steady state with a 49-tick/day drift: ema_diff ≈ ±4.8 ticks → slow_drift ≈ ±1.0.
-        # Fast EMA (alpha=0.04) lags 1.2 ticks behind a 0.0049 tick/step drift;
-        # slow EMA lags 4.9 ticks → ema_diff = fast-slow ≈ -3.7 ticks (bearish).
-        # Warm-up: ~700 steps to reach steady state, so no false signals at day start.
-        prev_slow = data.get("slow_ema_tom", mid)
-        slow_ema = 0.999 * prev_slow + 0.001 * mid
-        data["slow_ema_tom"] = slow_ema
-        # Normalise: 4-tick ema_diff = signal of 1.0 (capped at ±1.5)
-        slow_drift = max(-1.5, min(1.5, (ema - slow_ema) / 4.0))
-
-        # --- Trend slope: linear regression on recent 20 mids ---
-        # positive slope = price trending up = bullish
-        mids = data.get("tom_mids", [])
-        mids.append(mid)
-        if len(mids) > 20:
-            mids = mids[-20:]
-        data["tom_mids"] = mids
-
-        trend_signal = 0.0
-        n = len(mids)
-        if n >= 8:
-            x_mean = (n - 1) / 2.0
-            y_mean = sum(mids) / n
-            num = sum((i - x_mean) * (mids[i] - y_mean) for i in range(n))
-            den = sum((i - x_mean) ** 2 for i in range(n))
-            slope = num / den if den > 0 else 0.0
-            # Normalise: observed max slope ~0.44 ticks/step; 0.3 maps that to ≈1
-            trend_signal = max(-1.0, min(1.0, slope / 0.3))
-
-        # --- OBI Z-score: mean reversion of the imbalance itself ---
-        # Extreme positive OBI (heavy buyers) → OBI will revert → slight bearish edge
-        # Use Welford online update for rolling mean/variance
-        obi_h = data.get("obi_hist", {"n": 0, "mean": 0.0, "m2": 0.0})
-        n_obi = obi_h["n"] + 1
-        delta = imb1 - obi_h["mean"]
-        new_mean = obi_h["mean"] + delta / n_obi
-        new_m2 = obi_h["m2"] + delta * (imb1 - new_mean)
-        data["obi_hist"] = {"n": n_obi, "mean": new_mean, "m2": new_m2}
-
-        if n_obi >= 30:
-            std_obi = (new_m2 / n_obi) ** 0.5
-            obi_z = (imb1 - new_mean) / max(std_obi, 0.01)
-            # Clip Z to [-2, 2]; mean reversion → negative of Z
-            obi_z_signal = -max(-2.0, min(2.0, obi_z)) / 2.0
-        else:
-            obi_z_signal = 0.0
-
-        # --- Combined signal (bullish = positive) ---
-        # Original proven weights preserved; trend and OBI-Z added as lightweight extras.
-        # Avoid reducing proven weights — they were empirically calibrated.
-        # slow_drift: macro regime detector (alpha=0.001, half-life ~693 steps).
-        # Weight 0.10 is neutral on Kevin's day-2 and only -81 on day-1 (acceptable).
-        combined = (
-            0.65 * imb1
-            + 1.35 * spoof_signal
-            + 0.25 * trend_signal
-            + 0.15 * obi_z_signal
-            + 0.10 * slow_drift
-        )
+        # --- Combined microstructure signal ---
+        # Data analysis: fires 6% of ticks with 95-100% accuracy on next price move.
+        combined = 0.65 * imb1 + 1.35 * spoof_signal
 
         # --- Fair value ---
-        # slow_drift excluded from fair: fair_shift logic penalises it heavily in .worse mode.
-        # Drift edge comes from size/directional bias via combined signal instead.
         mean_revert = (ema - mid) / 8.0
-        fair = mid + 1.2 * combined + 0.7 * mean_revert + 0.8 * trend_signal
+        fair = mid + 1.2 * combined + 0.7 * mean_revert
 
-        buy_cap = limit - pos
-        sell_cap = limit + pos
-
-        # --- Passive MM ---
-        orders += self._passive_mm(
+        return self._passive_mm(
             product="TOMATOES",
             best_bid=bb,
             best_ask=ba,
@@ -182,13 +118,12 @@ class Trader:
             pos=pos,
             limit=limit,
             timestamp=state.timestamp,
-            base_size=68,
-            back_size=26,
+            base_size=79,
+            back_size=0,
             signal=combined,
-            one_sided_threshold=0.28,
-            max_bias=28,
+            one_sided_threshold=10.0,
+            max_bias=0,
         )
-        return orders
 
     # -----------------------------
     # MOON_ROCKS — pure passive MM until Round 1 data reveals dynamics
@@ -304,15 +239,6 @@ class Trader:
         bias = int(max(-max_bias, min(max_bias, round(signal * 40))))
         bid_size = base_size + max(0, bias)
         ask_size = base_size + max(0, -bias)
-
-        # Mild inventory penalty: reduced from 0.60→0.35 to keep fill volume high.
-        # merged wins by never penalizing; 0.35 is a compromise.
-        if pos > 0:
-            bid_size -= int(abs(pos) * 0.35)
-            ask_size += int(abs(pos) * 0.15)
-        elif pos < 0:
-            ask_size -= int(abs(pos) * 0.35)
-            bid_size += int(abs(pos) * 0.15)
 
         if directional > 0:
             bid_size += 10

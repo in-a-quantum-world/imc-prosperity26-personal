@@ -83,7 +83,16 @@
       "Bash(python bt_stats.py \"../../training-round/trader_mm_passive_fill.py\" \"0--1\" --no-out --data data)",
       "Bash(PYTHONIOENCODING=utf-8 python bt_stats.py \"../../training-round/trader_mm_passive_fill.py\" \"0--1\" --no-out --data data)",
       "Bash(PYTHONIOENCODING=utf-8 python bt_stats.py \"../../training-round/trader_mm_passive_fill.py\" \"0--2\" --no-out --data data)",
-      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4mcbt \"../../training-round/trader_mm_p3_style.py\" --quick)"
+      "Bash(backtester/.venv/Scripts/python.exe -m prosperity4mcbt \"../../training-round/trader_mm_p3_style.py\" --quick)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_mm_v2.py --sessions 100 --output tmp/v2_2sig_mc/)",
+      "Bash(cat)",
+      "Bash(python /tmp/market_microstructure.py)",
+      "Bash(python scripts/run_monte_carlo_backtest.py /c/quant-hacks/imc-prosperity26/training-round/trader_mm_two_signal_ema.py --sessions 100)",
+      "Bash(python -m prosperity4bt /c/quant-hacks/imc-prosperity26/training-round/trader_mm_two_signal_ema.py 0)",
+      "Bash(prosperity4btest /c/quant-hacks/imc-prosperity26/training-round/trader_mm_two_signal_ema.py 0 --merge-pnl)",
+      "Bash(python -m prosperity4bt /c/quant-hacks/imc-prosperity26/training-round/trader_mm_two_signal_ema.py 0 --merge-pnl)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0--2 0--1 --no-vis --no-out --match-trades all)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_test_b.py 0--2 0--1 --no-vis --no-out --match-trades all)"
     ]
   }
 }
