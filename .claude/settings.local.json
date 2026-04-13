@@ -95,7 +95,12 @@
       "Bash(python -m prosperity4bt ../../training-round/trader_test_b.py 0--2 0--1 --no-vis --no-out --match-trades all)",
       "Bash(python -m prosperity4bt ../../training-round/trader_adjusted_from_deepseek.py 0--2 0--1 --no-vis --no-out)",
       "Bash(python -m prosperity4bt ../../training-round/trader_adjusted_from_deepseek.py 0--2 0--1 --no-out)",
-      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_adjusted_from_deepseek.py --sessions 100 --output tmp/deepseek_mc/)"
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_adjusted_from_deepseek.py --sessions 100 --output tmp/deepseek_mc/)",
+      "Bash(python -m prosperity4bt ../../training-round/diagnosing/diag_ask_dominant.py 0--2 0--1 --no-vis --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/diagnosing/diag_ask_dominant.py 0--2 --no-vis --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_time_regime_askheavy.py 0--2 0--1 --no-vis --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_time_regime_askheavy.py 0--2 0--1 --no-out)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_time_regime_askheavy.py --sessions 100 --output tmp/time_regime_mc/)"
     ]
   }
 }
