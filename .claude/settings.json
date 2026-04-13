@@ -25,7 +25,21 @@
       "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0 -2 -1)",
       "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0--2 0--1 --no-vis --no-out)",
       "Bash(python -m prosperity4bt ../../training-round/trader_merged.py 0--2 0--1 --no-vis --no-out)",
-      "Bash(python starter.py --help)"
+      "Bash(python starter.py --help)",
+      "Bash(python -m prosperity4mcbt ../../training-round/trader_mm_v2.py --quick --out tmp/v2_quick/dashboard.json)",
+      "Read(//c/Users/rucha/Downloads/**)",
+      "Bash(python -m prosperity4bt ../../training-round/prosperity_4_tutorial_trader.py 0--2 0--1 --no-vis --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/prosperity_4_tutorial_trader.py 0--2 0--1 --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_mm_v2.py 0--2 0--1 --no-out)",
+      "Bash(python -m prosperity4bt ../../training-round/trader_merged.py 0--2 0--1 --no-out)",
+      "Bash(python backtester/prosperity4mcbt/__main__.py --help)",
+      "Bash(python scripts/run_monte_carlo_backtest.py --help)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/prosperity_4_tutorial_trader.py --sessions 100 --output tmp/tutorial_mc/)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_mm_v2.py --sessions 100 --output tmp/v2_mc/)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_merged.py --sessions 100 --output tmp/merged_mc/)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\rucha\\Downloads"
     ]
   }
 }
