@@ -26,9 +26,7 @@ class Trader:
 
         return result, 0, json.dumps(data, separators=(",", ":"))
 
-    # -----------------------------
     # EMERALDS — full-size passive MM, no inventory penalty
-    # -----------------------------
     # trader_merged.py gets +2000–3000 more on Emeralds vs our signal-based approach
     # because it always posts 79 units with no size reduction. Since Emeralds is
     # anchored at 10000, any inventory will revert — inventory penalty just costs fills.

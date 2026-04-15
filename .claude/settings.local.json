@@ -112,7 +112,12 @@
       "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best1.py --sessions 100 --output tmp/cfd_best1/)",
       "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best2.py --sessions 100 --output tmp/cfd_best2/)",
       "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best3.py --sessions 100 --output tmp/cfd_best3/)",
-      "Bash(python scripts/run_monte_carlo_backtest.py c:/quant-hacks/imc-prosperity26/training-round/cfd_best1.py --sessions 100 --output tmp/cfd_best1/)"
+      "Bash(python scripts/run_monte_carlo_backtest.py c:/quant-hacks/imc-prosperity26/training-round/cfd_best1.py --sessions 100 --output tmp/cfd_best1/)",
+      "Bash(awk -F';' 'NR>1 && \\($2!=\"\" || $3!=\"\"\\) {print $2 \" | \" $3}')",
+      "Bash(python3 -)",
+      "Bash(python misc-useful/insider_analysis.py \"C:/Users/rucha/Downloads/ROUND1\")",
+      "Bash(python tools/visualise_round1.py)",
+      "Bash(python -c ' *)"
     ]
   }
 }
