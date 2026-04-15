@@ -100,7 +100,19 @@
       "Bash(python -m prosperity4bt ../../training-round/diagnosing/diag_ask_dominant.py 0--2 --no-vis --no-out)",
       "Bash(python -m prosperity4bt ../../training-round/trader_time_regime_askheavy.py 0--2 0--1 --no-vis --no-out)",
       "Bash(python -m prosperity4bt ../../training-round/trader_time_regime_askheavy.py 0--2 0--1 --no-out)",
-      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_time_regime_askheavy.py --sessions 100 --output tmp/time_regime_mc/)"
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/trader_time_regime_askheavy.py --sessions 100 --output tmp/time_regime_mc/)",
+      "Bash(ls c:/quant-hacks/imc-prosperity26/training-round/*.py)",
+      "Bash(python -m prosperity4bt training-round/shriyans-logs/57971.py 0 --match-trades worse)",
+      "Bash(python -m prosperity4bt training-round/shriyans-logs/45076.py 0 --match-trades worse)",
+      "Bash(python -m prosperity4bt ../../training-round/cfd_technique.py 0 --match-trades worse)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_technique.py --sessions 100 --output tmp/cfd_mc/)",
+      "Bash(wait)",
+      "Bash(python sweep_cfd.py)",
+      "Bash(tasklist)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best1.py --sessions 100 --output tmp/cfd_best1/)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best2.py --sessions 100 --output tmp/cfd_best2/)",
+      "Bash(python scripts/run_monte_carlo_backtest.py ../../training-round/cfd_best3.py --sessions 100 --output tmp/cfd_best3/)",
+      "Bash(python scripts/run_monte_carlo_backtest.py c:/quant-hacks/imc-prosperity26/training-round/cfd_best1.py --sessions 100 --output tmp/cfd_best1/)"
     ]
   }
 }
