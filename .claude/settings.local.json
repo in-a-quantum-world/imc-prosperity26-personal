@@ -117,7 +117,9 @@
       "Bash(python3 -)",
       "Bash(python misc-useful/insider_analysis.py \"C:/Users/rucha/Downloads/ROUND1\")",
       "Bash(python tools/visualise_round1.py)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(python misc-useful/anonymous_insider_tracker.py)",
+      "Bash(ls /c/quant-hacks/imc-prosperity26/tools/round1*)"
     ]
   }
 }

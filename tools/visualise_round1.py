@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 DATA_DIR = "C:/Users/rucha/Downloads/ROUND1"
-OUT_DIR  = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'round1')
 
 # ── Styling ───────────────────────────────────────────────────────────────────
 plt.rcParams.update({
@@ -383,130 +383,163 @@ def plot_osmium_pattern(prices_df):
         print("No ASH_COATED_OSMIUM data for pattern analysis.")
         return
 
-    mid = pdata['mid_price'].interpolate()
+    # Fit the dominant sine per day (period ~5000 bars confirmed by FFT)
+    PERIOD_BARS = 5000
+    day_colors  = ['#58a6ff', '#e3b341', '#3fb950']
 
-    # FFT
-    period_samples, freqs, fft_vals = find_dominant_period(mid)
-    print(f"\n[ASH_COATED_OSMIUM] Dominant period: {period_samples:.1f} samples")
+    # Autocorrelation on day 0 (cleanest)
+    d0_mid  = pdata[pdata['day'] == 0]['mid_price']
+    max_lag = 600
+    lags = range(1, min(max_lag, len(d0_mid) // 3))
+    acf  = [d0_mid.autocorr(lag=l) for l in lags]
 
-    # Sine fit on full series
-    fitted, residuals, amp, offset, phase = fit_sine(pdata['global_ts'], mid, period_samples)
-    print(f"[ASH_COATED_OSMIUM] Sine fit: amplitude={amp:.2f}, offset={offset:.2f}")
-    print(f"[ASH_COATED_OSMIUM] Residual std: {residuals.std():.4f}")
+    # FFT on day 0
+    x = d0_mid.values - d0_mid.mean()
+    fft_vals  = np.abs(np.fft.rfft(x))
+    freqs_arr = np.fft.rfftfreq(len(x))
+    fft_vals[0] = 0
 
-    # Autocorrelation
-    max_lag = 500
-    lags = range(1, min(max_lag, len(mid) // 3))
-    acf = [mid.autocorr(lag=l) for l in lags]
-
-    fig = plt.figure(figsize=(18, 20))
-    fig.suptitle('ASH_COATED_OSMIUM — Hidden Pattern Analysis',
+    fig = plt.figure(figsize=(20, 22))
+    fig.suptitle('ASH_COATED_OSMIUM — Hidden Pattern Deep-Dive',
                  fontsize=14, fontweight='bold', color='#f0f6fc', y=0.99)
     gs = gridspec.GridSpec(4, 2, figure=fig,
                            hspace=0.55, wspace=0.28,
                            left=0.06, right=0.97, top=0.96, bottom=0.03)
 
-    # Panel A: raw mid + fitted sine
+    # ── Panel A: per-day overlay (aligned on day-internal timestamp) ────────
     ax = fig.add_subplot(gs[0, :])
-    ax.plot(pdata['global_ts'], mid.values,
-            color=COLORS['osmium_mid'], linewidth=0.8, label='Mid price', alpha=0.8)
-    ax.plot(pdata['global_ts'][:len(fitted)], fitted,
-            color=COLORS['sine_fit'], linewidth=1.5, linestyle='--',
-            label=f'Best-fit sine  (A={amp:.1f}, T={period_samples:.0f} bars, offset={offset:.0f})')
-    ax.set_title('Mid-price + fitted sinusoidal model (all days)')
-    ax.set_xlabel('Global timestamp')
+    for i, day in enumerate(DAYS):
+        ddata = pdata[pdata['day'] == day].copy()
+        if ddata.empty:
+            continue
+        mid = ddata['mid_price']
+        ts  = ddata['timestamp'].values
+        ax.plot(ts, mid.values, color=day_colors[i],
+                linewidth=0.8, label=f'Day {day}', alpha=0.9)
+        # Fit & overlay sine
+        fitted, res, amp, offset_val, phase = fit_sine(ts, mid, PERIOD_BARS)
+        ax.plot(ts[:len(fitted)], fitted,
+                color=day_colors[i], linewidth=2.0, linestyle='--',
+                alpha=0.8, label=f'Day {day} sine fit (A={amp:.1f}, offset={offset_val:.0f})')
+    ax.axhline(10000, color='#30363d', linewidth=1.2, linestyle=':')
+    ax.set_title(f'ASH_COATED_OSMIUM — mid-price overlaid per day + sine fit (T≈{PERIOD_BARS} bars)')
+    ax.set_xlabel('Intra-day timestamp')
     ax.set_ylabel('Price')
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=7, ncol=3)
 
-    # Panel B: residuals after sine removal
+    # ── Panel B: FFT power spectrum (day 0) ─────────────────────────────────
     ax = fig.add_subplot(gs[1, 0])
-    t_vals = pdata['global_ts'][:len(residuals)]
-    ax.fill_between(t_vals, residuals,
-                    where=(np.array(residuals) < 0), alpha=0.5,
-                    color=COLORS['signal_long'], label='Below fit')
-    ax.fill_between(t_vals, residuals,
-                    where=(np.array(residuals) >= 0), alpha=0.5,
-                    color=COLORS['signal_short'], label='Above fit')
-    ax.axhline(0, color='#30363d', linewidth=1)
-    ax.set_title(f'Residuals after sine removal (std={residuals.std():.2f})')
-    ax.set_xlabel('Global timestamp')
-    ax.set_ylabel('Residual (ticks)')
+    mask = (freqs_arr > 0.00005) & (freqs_arr < 0.003)
+    periods_in_bars = 1.0 / freqs_arr[mask]
+    ax.plot(periods_in_bars, fft_vals[mask], color=COLORS['fft'], linewidth=0.9)
+    for p, lbl in [(PERIOD_BARS, f'~{PERIOD_BARS} bars'), (2*PERIOD_BARS, f'~{2*PERIOD_BARS} bars')]:
+        ax.axvline(p, color='white', linewidth=1.2, linestyle='--', alpha=0.7, label=lbl)
+    ax.set_title('FFT power spectrum — day 0 (period in bars, 1 bar = 100ms)')
+    ax.set_xlabel('Period (bars)')
+    ax.set_ylabel('|FFT| magnitude')
+    ax.set_xlim(0, 15000)
     ax.legend(fontsize=7)
 
-    # Panel C: FFT power spectrum
+    # ── Panel C: autocorrelation ─────────────────────────────────────────────
     ax = fig.add_subplot(gs[1, 1])
-    # Only plot positive freqs above ~0.0001 to avoid DC
-    mask = freqs > 0.0002
-    ax.plot(1.0 / freqs[mask], fft_vals[mask],
-            color=COLORS['fft'], linewidth=1.0)
-    ax.axvline(period_samples, color='white', linewidth=1.5, linestyle='--',
-               label=f'Dominant period = {period_samples:.0f} bars')
-    ax.set_title('FFT power spectrum (period in samples)')
-    ax.set_xlabel('Period (bars)')
-    ax.set_ylabel('FFT magnitude')
-    ax.set_xlim(0, min(period_samples * 5, len(mid) // 2))
-    ax.legend(fontsize=8)
-
-    # Panel D: autocorrelation
-    ax = fig.add_subplot(gs[2, 0])
     ax.plot(list(lags), acf, color=COLORS['osmium_mid'], linewidth=0.8)
-    ax.axhline(0, color='#30363d', linewidth=1)
-    ax.axhline( 0.05, color='#8b949e', linewidth=0.8, linestyle=':')
-    ax.axhline(-0.05, color='#8b949e', linewidth=0.8, linestyle=':')
-    # Mark first strong positive peak
-    acf_arr = np.array(acf)
-    if acf_arr.max() > 0.1:
-        peak_lag = list(lags)[np.argmax(acf_arr)]
-        ax.axvline(peak_lag, color=COLORS['sine_fit'], linewidth=1.5,
-                   linestyle='--', label=f'Peak ACF @ lag {peak_lag}')
-    ax.set_title('Autocorrelation function (up to lag 500)')
+    ax.axhline(0,    color='#30363d', linewidth=1)
+    ax.axhline( 0.1, color='#8b949e', linewidth=0.8, linestyle=':', alpha=0.7)
+    ax.axhline(-0.1, color='#8b949e', linewidth=0.8, linestyle=':', alpha=0.7)
+    ax.axvline(1, color=COLORS['sine_fit'], linewidth=1.5, linestyle='--',
+               label=f'lag-1 ACF = {acf[0]:.3f}')
+    ax.set_title('Autocorrelation — day 0 mid-price (lag 1..600)')
     ax.set_xlabel('Lag (bars)')
     ax.set_ylabel('ACF')
     ax.legend(fontsize=7)
 
-    # Panel E: per-day mid-price with sine overlay
-    ax = fig.add_subplot(gs[2, 1])
-    day_colors = ['#58a6ff', '#e3b341', '#3fb950']
-    for i, day in enumerate(DAYS):
-        ddata = pdata[pdata['day'] == day]
-        if ddata.empty:
-            continue
-        ax.plot(ddata['timestamp'], ddata['mid_price'],
-                color=day_colors[i], linewidth=0.8, label=f'Day {day}', alpha=0.9)
-    ax.set_title('ASH_COATED_OSMIUM — mid-price per day (aligned)')
-    ax.set_xlabel('Timestamp (within day)')
-    ax.set_ylabel('Price')
+    # ── Panel D: residuals from sine fit (day 0) ─────────────────────────────
+    ax = fig.add_subplot(gs[2, 0])
+    d0_ts  = pdata[pdata['day'] == 0]['timestamp'].values
+    d0_mid_s = pdata[pdata['day'] == 0]['mid_price']
+    fitted0, res0, amp0, off0, ph0 = fit_sine(d0_ts, d0_mid_s, PERIOD_BARS)
+    ax.fill_between(d0_ts[:len(res0)], res0,
+                    where=(res0 < 0), alpha=0.5,
+                    color=COLORS['signal_long'], label='Below fit')
+    ax.fill_between(d0_ts[:len(res0)], res0,
+                    where=(res0 >= 0), alpha=0.5,
+                    color=COLORS['signal_short'], label='Above fit')
+    ax.axhline(0, color='#30363d', linewidth=1)
+    ax.axhline( res0.std(), color='white', linewidth=1, linestyle='--', alpha=0.5,
+                label=f'±1σ = {res0.std():.2f}')
+    ax.axhline(-res0.std(), color='white', linewidth=1, linestyle='--', alpha=0.5)
+    ax.set_title(f'Residuals after sine removal — day 0 (residual σ={res0.std():.2f})')
+    ax.set_xlabel('Intra-day timestamp')
+    ax.set_ylabel('Residual (ticks)')
     ax.legend(fontsize=7)
 
-    # Panel F: rolling 100-bar z-score (mean-reversion signal)
-    ax = fig.add_subplot(gs[3, 0])
-    roll_mean = mid.rolling(200, min_periods=50).mean()
-    roll_std  = mid.rolling(200, min_periods=50).std()
-    zscore = (mid - roll_mean) / roll_std.replace(0, np.nan)
-    ax.plot(pdata['global_ts'], zscore, color=COLORS['osmium_mid'], linewidth=0.8)
+    # ── Panel E: z-score mean-reversion signal (all days) ────────────────────
+    ax = fig.add_subplot(gs[2, 1])
+    for i, day in enumerate(DAYS):
+        ddata = pdata[pdata['day'] == day].copy()
+        mid   = ddata['mid_price']
+        roll_mean = mid.rolling(200, min_periods=50).mean()
+        roll_std  = mid.rolling(200, min_periods=50).std().replace(0, np.nan)
+        zscore = (mid - roll_mean) / roll_std
+        ax.plot(ddata['global_ts'], zscore, color=day_colors[i],
+                linewidth=0.7, label=f'Day {day}', alpha=0.85)
     ax.axhline( 2, color=COLORS['signal_short'], linewidth=1, linestyle='--', label='+2σ')
     ax.axhline(-2, color=COLORS['signal_long'],  linewidth=1, linestyle='--', label='-2σ')
     ax.axhline(0, color='#30363d', linewidth=1)
-    ax.set_title('200-bar rolling z-score (mean-reversion signal)')
+    ax.set_title('200-bar rolling z-score (mean-reversion signal, all days)')
     ax.set_xlabel('Global timestamp')
     ax.set_ylabel('Z-score')
+    ax.legend(fontsize=7, ncol=2)
+
+    # ── Panel F: residual distribution ───────────────────────────────────────
+    ax = fig.add_subplot(gs[3, 0])
+    ax.set_facecolor('#161b22')
+    ax.hist(res0, bins=50, color=COLORS['fft'], alpha=0.75, edgecolor='#30363d')
+    ax.axvline(0, color='white', linewidth=1)
+    ax.axvline( res0.std(), color=COLORS['signal_short'], linewidth=1.2,
+                linestyle='--', label=f'+1σ={res0.std():.2f}')
+    ax.axvline(-res0.std(), color=COLORS['signal_long'], linewidth=1.2,
+               linestyle='--', label=f'-1σ={res0.std():.2f}')
+    ax.set_title('Residual distribution (after sine removal, day 0)')
+    ax.set_xlabel('Residual (ticks)')
+    ax.set_ylabel('Count')
     ax.legend(fontsize=7)
 
-    # Panel G: residual histogram
+    # ── Panel G: osmium fair-value estimation over all days ──────────────────
     ax = fig.add_subplot(gs[3, 1])
-    ax.set_facecolor('#161b22')
-    ax.hist(residuals, bins=50, color=COLORS['fft'], alpha=0.75, edgecolor='#30363d')
-    ax.axvline(0, color='white', linewidth=1)
-    ax.set_title(f'Residual distribution (std={residuals.std():.2f})')
-    ax.set_xlabel('Residual value')
-    ax.set_ylabel('Count')
+    for i, day in enumerate(DAYS):
+        ddata = pdata[pdata['day'] == day].copy()
+        if ddata.empty:
+            continue
+        ts  = ddata['timestamp'].values
+        mid = ddata['mid_price']
+        fitted_vals, _, amp_d, off_d, _ = fit_sine(ts, mid, PERIOD_BARS)
+        ax.plot(ts[:len(fitted_vals)], fitted_vals,
+                color=day_colors[i], linewidth=1.5,
+                label=f'Day {day}: A={amp_d:.1f}, offset={off_d:.0f}')
+    ax.axhline(10000, color='#30363d', linewidth=1.2, linestyle=':',
+               label='10000 reference')
+    ax.set_title('Sine-model fair-value estimates per day')
+    ax.set_xlabel('Intra-day timestamp')
+    ax.set_ylabel('Estimated fair value')
+    ax.legend(fontsize=7)
 
     out = os.path.join(OUT_DIR, 'round1_osmium_pattern.png')
     plt.savefig(out, dpi=150, bbox_inches='tight', facecolor=fig.get_facecolor())
     print(f"Saved: {out}")
     plt.close(fig)
 
-    return period_samples, amp, offset, residuals.std()
+    # Print sine-fit summary
+    for i, day in enumerate(DAYS):
+        ddata = pdata[pdata['day'] == day]
+        if ddata.empty:
+            continue
+        ts  = ddata['timestamp'].values
+        mid = ddata['mid_price']
+        _, res_d, amp_d, off_d, ph_d = fit_sine(ts, mid, PERIOD_BARS)
+        print(f"  Day {day}: A={amp_d:.2f}, offset={off_d:.2f}, residual_std={res_d.std():.4f}")
+
+    return PERIOD_BARS, amp0, off0, res0.std()
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
