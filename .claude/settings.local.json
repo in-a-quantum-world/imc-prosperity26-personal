@@ -119,7 +119,17 @@
       "Bash(python tools/visualise_round1.py)",
       "Bash(python -c ' *)",
       "Bash(python misc-useful/anonymous_insider_tracker.py)",
-      "Bash(ls /c/quant-hacks/imc-prosperity26/tools/round1*)"
+      "Bash(ls /c/quant-hacks/imc-prosperity26/tools/round1*)",
+      "Bash(python misc-useful/run_anon_insider_csv.py \"C:/Users/rucha/Downloads/ROUND1\")",
+      "Bash(python -c \"import prosperity4bt; print\\(prosperity4bt.__file__\\)\")",
+      "Bash(prosperity4btest --help)",
+      "Bash(python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\rucha\\Downloads\\ROUND1"
     ]
   }
 }

@@ -82,15 +82,25 @@ SHORT   = -1
 # ── Tunable parameters ─────────────────────────────────────────────────────────
 
 # How many ticks of mid-price history to keep for finding the rolling extremum.
-# 50 ticks × 100 ts/tick = 5 000 timestamp units ≈ last ~5 seconds of the sim.
+# 50 ticks x 100 ts/tick = 5 000 timestamp units (~5 seconds of sim).
 ROLLING_WINDOW: int = 50
 
 # A bid/ask qualifies as "at the extremum" if it's within this many price units.
 PRICE_TOLERANCE: float = 1.0
 
-# Volume at the candidate level must exceed this multiple of the average volume
-# across all levels on that side of the book to count as anomalously large.
-AVG_VOLUME_MULTIPLIER: float = 1.8
+# ABSOLUTE volume threshold — order must be at least this size to be flagged.
+# Calibrated from Round 1 data: order books have 1–2 levels per tick; there is
+# a clean bimodal split between "small" bots (vol 10–15) and a distinct actor
+# placing larger orders (vol 17–30).  Setting 17 captures that actor for ASH;
+# use 15 for INTARIAN_PEPPER_ROOT.  Override per-product via PRODUCT_VOL_OVERRIDE.
+# NOTE: do NOT use the relative-multiplier approach — with only 1-2 levels in
+# the book the average is too noisy and the ratio is always ~1.0.
+ABSOLUTE_VOL_THRESHOLD: int = 17
+
+# Per-product overrides: {product_name: min_volume_to_flag}
+PRODUCT_VOL_OVERRIDE: dict[str, int] = {
+    "INTARIAN_PEPPER_ROOT": 15,
+}
 
 # How many ticks after emitting a signal we wait to check whether it was right.
 # At 100 ts/tick, 10 ticks = 1 000 ts.
@@ -239,25 +249,24 @@ class ProductAnonState:
     ) -> tuple[int, float]:
         """
         For one side of the book, check whether any level near `extremum`
-        has anomalously high volume.
-        """
-        volumes = [abs(v) for v in levels.values()]
-        if not volumes:
-            return NEUTRAL, 0.0
+        has a volume >= ABSOLUTE_VOL_THRESHOLD (or the per-product override).
 
-        avg_vol = sum(volumes) / len(volumes)
-        if avg_vol < 1e-6:
-            return NEUTRAL, 0.0
+        Why absolute rather than relative:
+          The Round 1 book only has 1-2 levels per tick, so the "average" is
+          just the single best-level volume and the ratio is always 1.0.
+          An absolute cutoff cleanly separates the two bot populations observed:
+            small orders (vol 10-15) = normal market makers
+            large orders (vol 17+)   = the predictive actor
+        """
+        threshold = PRODUCT_VOL_OVERRIDE.get(self.product, ABSOLUTE_VOL_THRESHOLD)
 
         for price, raw_vol in levels.items():
             vol = abs(raw_vol)
-            if abs(price - extremum) <= PRICE_TOLERANCE:
-                ratio = vol / avg_vol
-                if ratio >= AVG_VOLUME_MULTIPLIER:
-                    # Confidence: how much larger is this order vs. the average?
-                    # Capped at 1.0.
-                    raw_conf = min((ratio - AVG_VOLUME_MULTIPLIER + 1.0) / 3.0, 1.0)
-                    return direction, raw_conf
+            if abs(price - extremum) <= PRICE_TOLERANCE and vol >= threshold:
+                # Confidence scales with how much the volume exceeds the threshold.
+                # vol == threshold -> conf = 0.33; vol == threshold*2 -> conf = 0.67; capped at 1.0
+                raw_conf = min(vol / (threshold * 1.5), 1.0)
+                return direction, raw_conf
 
         return NEUTRAL, 0.0
 
