@@ -126,7 +126,26 @@
       "Bash(python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
       "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
       "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-vis --no-out)",
-      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)"
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(ls -lt /c/Users/rucha/Downloads/*.py)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods_with_insider_cycle_regime.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_first_intarian_goods_with_insider_cycle_regime.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(python misc-useful/run_daily_extreme_csv.py \"C:/Users/rucha/Downloads/ROUND1\")",
+      "Bash(python3 -c ' *)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v4_pepper_directional_osmium_conservative.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v4_pepper_directional_osmium_conservative.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(python3 -c \"import os; print\\(os.listdir\\('C:/Users/rucha/Downloads/ROUND1'\\)\\)\")",
+      "Read(//mnt/c/Users/rucha/Downloads/**)",
+      "Bash(cmd.exe /c \"dir C:\\\\\\\\Users\\\\\\\\rucha\\\\\\\\Downloads\\\\\\\\ROUND1\\\\\\\\\")",
+      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\rucha\\\\Downloads\\\\ROUND1\")",
+      "Bash(python3 -c \"import os; print\\(os.listdir\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\rucha\\\\\\\\\\\\\\\\Downloads\\\\\\\\\\\\\\\\ROUND1'\\)\\)\")",
+      "Bash(python3 -c \"import os; print\\(os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads\\\\ROUND1'\\)\\)\")",
+      "Bash(python3 -c \"import os; print\\(os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\)\\)\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v5_max_aggression_pepper_optional_osmium.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v5_max_aggression_pepper_optional_osmium.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v6.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(python3 -c \"import os; files = os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\); [print\\(f\\) for f in sorted\\(files\\) if 'trader' in f.lower\\(\\) or 'v7' in f.lower\\(\\) or '7.1' in f.lower\\(\\) or '7_1' in f.lower\\(\\)]\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\rucha\\Downloads\\ROUND1"
