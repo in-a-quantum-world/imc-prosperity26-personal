@@ -32,7 +32,7 @@ class Trader:
     OSMIUM = "ASH_COATED_OSMIUM"
 
     PEPPER_SOFT_LIMIT = 80
-    OSMIUM_SOFT_LIMIT = 78
+    OSMIUM_SOFT_LIMIT = 80
 
     def run(self, state: TradingState):
         data = self._load_data(state)
@@ -288,10 +288,6 @@ class Trader:
         pos = self._add_sell(orders, product, ask_price, sell_size, pos, limit)
 
         return orders
-
-    # ------------------------------------------------------------------
-    # OSMIUM - Shriyans-inspired, higher capacity
-    # ------------------------------------------------------------------
 
     def trade_osmium(self, state: TradingState, order_depth: OrderDepth, data):
         product = self.OSMIUM
