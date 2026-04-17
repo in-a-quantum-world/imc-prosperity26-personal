@@ -145,10 +145,43 @@
       "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v5_max_aggression_pepper_optional_osmium.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
       "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v5_max_aggression_pepper_optional_osmium.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
       "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v6.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
-      "Bash(python3 -c \"import os; files = os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\); [print\\(f\\) for f in sorted\\(files\\) if 'trader' in f.lower\\(\\) or 'v7' in f.lower\\(\\) or '7.1' in f.lower\\(\\) or '7_1' in f.lower\\(\\)]\")"
+      "Bash(python3 -c \"import os; files = os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\); [print\\(f\\) for f in sorted\\(files\\) if 'trader' in f.lower\\(\\) or 'v7' in f.lower\\(\\) or '7.1' in f.lower\\(\\) or '7_1' in f.lower\\(\\)]\")",
+      "Bash(python3 -c \"import os; files = os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\); [print\\(f\\) for f in sorted\\(files\\) if 'trader' in f.lower\\(\\)]\")",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/trader_round1_v6.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:\\\\Users\\\\rucha\\\\Downloads\\\\trader_round1_v6.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(python3 -c \"import os; [print\\(f\\) for f in sorted\\(os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\)\\) if f.endswith\\('.py'\\)]\")",
+      "Bash(cp \"/c/Users/rucha/Downloads/trader_round1_v6.py\" \"/c/quant-hacks/imc-prosperity26/backtester/caution-backtester/trader_round1_v6.py\")",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt trader_round1_v6.py 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(python3 -c \"import shutil; shutil.copy\\(r'C:\\\\Users\\\\rucha\\\\Downloads\\\\trader_round1_v7_1_adaptive_pepper_full_osmium.py', r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\trader_v7_1.py'\\)\")",
+      "Bash(python -m prosperity4bt ../../trader_v7_1.py 1 --no-vis)",
+      "Bash(python3 -c \"import shutil; shutil.copy\\(r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\trader_v7_1.py', r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\backtester\\\\imc-prosperity-4-backtester\\\\trader_v7_1.py'\\)\")",
+      "Bash(python -m prosperity4bt trader_v7_1.py 1 --no-vis)",
+      "Bash(python -m prosperity4bt ../../trader_v7_1.py 1)",
+      "Bash(python3 -c \"import shutil; shutil.copy\\(r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\backtester\\\\imc-prosperity-4-backtester\\\\prosperity4bt\\\\datamodel.py', r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\backtester\\\\imc-prosperity-4-backtester\\\\datamodel.py'\\)\")",
+      "Bash(python -m prosperity4bt trader_v7_1.py 1--2 1--1 1-0 --no-vis --data ../caution-backtester/prosperity4bt/resources)",
+      "Bash(python3 -c \"import os; print\\([f for f in os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\) if 'overfit' in f.lower\\(\\)]\\)\")",
+      "Bash(python -m prosperity4bt ../../trader_overfit_lab.py 1)",
+      "Bash(python -m prosperity4bt trader_overfit_lab.py 1--2 1--1 1-0 --no-vis --data ../caution-backtester/prosperity4bt/resources)",
+      "Bash(python3 -c \"import os; print\\([f for f in os.listdir\\(r'C:\\\\Users\\\\rucha\\\\Downloads'\\) if 'hiden' in f.lower\\(\\) or 'hidden' in f.lower\\(\\)]\\)\")",
+      "Bash(pip index *)",
+      "Bash(python3 -m prosperity4btx --help)",
+      "Bash(python -m prosperity4btx --help)",
+      "Bash(python3.14 -m prosperity4btx --help)",
+      "Bash(python3 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(python3 -c \"import prosperity4btx\")",
+      "Bash(ls -lt /c/Users/rucha/Downloads/*.zip)",
+      "Bash(unzip -l /c/Users/rucha/Downloads/256013.zip)",
+      "Bash(unzip -o /c/Users/rucha/Downloads/256013.zip -d /c/Users/rucha/Downloads/256013/)",
+      "Bash(python \"C:\\\\Users\\\\rucha\\\\AppData\\\\Roaming\\\\Python\\\\Python314\\\\Scripts\\\\prosperity4btx.exe\" --help)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/256013/256013.py\" 1--2 1--1 1-0 --data ./prosperity4bt --no-vis --no-out)",
+      "Bash(PYTHONPATH=\"./prosperity4bt\" python -m prosperity4bt \"C:/Users/rucha/Downloads/256013/256013.py\" 1--2 1--1 1-0 --data ./prosperity4bt/resources --no-out)",
+      "Bash(python generate_osmium_variants.py)",
+      "Bash(python run_osmium_sweep.py)",
+      "Bash(PYTHONPATH=\"./prosperity3bt\" python -m prosperity3bt \"C:/Users/rucha/Downloads/256013/256013.py\" 1--2 1--1 1-0 --no-out)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\rucha\\Downloads\\ROUND1"
+      "C:\\Users\\rucha\\Downloads\\ROUND1",
+      "C:\\quant-hacks\\imc-prosperity26\\backtester\\caution-backtester\\prosperity4bt\\resources\\round1"
     ]
   }
 }
