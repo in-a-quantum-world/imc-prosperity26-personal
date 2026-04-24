@@ -203,7 +203,8 @@
       "Bash(python3 -c \"import shutil; shutil.copy\\(r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\round1\\\\best_version-round1.py', r'C:\\\\quant-hacks\\\\imc-prosperity26\\\\backtester\\\\imc-prosperity-4-backtester\\\\best_version-round1.py'\\)\")",
       "Bash(python -m prosperity4bt \"best_version-round1.py\" 1--2 1--1 1-0 --no-vis --data ../caution-backtester/prosperity4bt/resources)",
       "Bash(cp \"c:/quant-hacks/imc-prosperity26/round1/better_best_round1.py\" \"c:/quant-hacks/imc-prosperity26/backtester/imc-prosperity-4-backtester/better_best_round1.py\")",
-      "Bash(python -m prosperity4bt better_best_round1.py 1--2 1--1 1-0 --no-vis --data ../caution-backtester/prosperity4bt/resources)"
+      "Bash(python -m prosperity4bt better_best_round1.py 1--2 1--1 1-0 --no-vis --data ../caution-backtester/prosperity4bt/resources)",
+      "Bash(awk -F';' 'NR>1 {print $3}' \"c:/Users/rucha/Downloads/prices_round_3_day_0.csv\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\rucha\\Downloads\\ROUND1",
