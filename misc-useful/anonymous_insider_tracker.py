@@ -1,11 +1,10 @@
 """
 Anonymous Insider Tracker
-──────────────────────────
-Detects an insider bot WITHOUT knowing their name, purely from order-book
+Detects an insider bot WITHOUT knowing their identity, purely from order-book
 behaviour.
 
-Core insight (observed in P3)
-──────────────────────────────
+Core insight (observed in Prosperity3!)
+
 An insider who knows future price direction places *passive* (maker) orders
 at price levels that are genuinely local extrema:
 
@@ -18,8 +17,7 @@ at price levels that are genuinely local extrema:
 A random market-maker's volume is spread across many levels; the insider
 concentrates unusual size exactly at the extremum.  We detect that anomaly.
 
-Detection algorithm (per product, per tick)
-────────────────────────────────────────────
+This is how the detection will work:
 1. Maintain a rolling window of mid-prices (ROLLING_WINDOW ticks).
 2. Find the rolling min and rolling max of that window.
 3. For the current best bid:
@@ -34,8 +32,7 @@ Detection algorithm (per product, per tick)
    Confidence = min(raw_confidence, hit_rate) so a low-accuracy signal is
    down-weighted automatically.
 
-HOW TO USE
-──────────
+HOW TO USE:
 1.  Instantiate AnonymousInsiderTracker (one shared instance across all
     products is fine — it keeps per-product state internally).
 
@@ -51,8 +48,7 @@ HOW TO USE
       e.  Persist:
             trader_data = tracker.to_trader_data()
 
-MINIMAL EXAMPLE
-───────────────
+use case example:
     from anonymous_insider_tracker import AnonymousInsiderTracker, LONG, SHORT, NEUTRAL
 
     class Trader:
@@ -74,12 +70,9 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Optional
 
-# ── Direction constants ────────────────────────────────────────────────────────
 LONG    =  1
 NEUTRAL =  0
 SHORT   = -1
-
-# ── Tunable parameters ─────────────────────────────────────────────────────────
 
 # How many ticks of mid-price history to keep for finding the rolling extremum.
 # 50 ticks x 100 ts/tick = 5 000 timestamp units (~5 seconds of sim).
@@ -114,7 +107,7 @@ MIN_CONFIRMATIONS: int = 5
 SIGNAL_TTL: int = 8
 
 
-# ── Per-product state ──────────────────────────────────────────────────────────
+# ── Per-product state 
 
 @dataclass
 class ProductAnonState:
@@ -135,7 +128,6 @@ class ProductAnonState:
     last_signal_ts: int = 0
     last_signal_confidence: float = 0.0
 
-    # ── Helpers ──────────────────────────────────────────────────────────────
 
     def rolling_min(self) -> Optional[float]:
         if not self.price_history:
@@ -152,8 +144,6 @@ class ProductAnonState:
         if self.confirmed_total < MIN_CONFIRMATIONS:
             return 1.0   # no penalty until we have enough data
         return self.confirmed_correct / self.confirmed_total
-
-    # ── Main update ──────────────────────────────────────────────────────────
 
     def update(self, ts: int, mid_price: float, order_depth) -> tuple[int, float]:
         """
@@ -227,7 +217,7 @@ class ProductAnonState:
             direction=SHORT,
         )
 
-        # ── Pick the stronger signal ─────────────────────────────────────────
+        # ── Pick the stronger signal 
         if bid_conf >= ask_conf and bid_conf > 0:
             # Normalise confidence by how close to the extremum we are.
             # Maximum confidence when mid ≈ roll_min (price IS at the low).
@@ -336,19 +326,17 @@ class ProductAnonState:
         return obj
 
 
-# ── Main tracker ───────────────────────────────────────────────────────────────
+#  Main tracker 
+#Drop-in companion to InsiderTracker — detects an unnamed insider bot
+#from order-book volume anomalies at rolling price extrema.
 
 class AnonymousInsiderTracker:
-    """
-    Drop-in companion to InsiderTracker — detects an unnamed insider bot
-    from order-book volume anomalies at rolling price extrema.
-    """
 
     def __init__(self, states: dict[str, ProductAnonState] | None = None):
         self._states: dict[str, ProductAnonState] = states or {}
         self._current_ts: int = 0
 
-    # ── Persistence ───────────────────────────────────────────────────────────
+    #  Persistence 
 
     @classmethod
     def from_trader_data(cls, trader_data_str: str) -> "AnonymousInsiderTracker":
@@ -373,10 +361,9 @@ class AnonymousInsiderTracker:
         }
         return json.dumps(blob)
 
-    # ── Core update ───────────────────────────────────────────────────────────
+    # Core update to be called once per tick at the top of the Trder.run()
 
     def update(self, state) -> None:
-        """Call once per tick at the top of Trader.run()."""
         self._current_ts = state.timestamp
 
         for product, order_depth in state.order_depths.items():
@@ -394,7 +381,7 @@ class AnonymousInsiderTracker:
 
             self._states[product].update(state.timestamp, mid, order_depth)
 
-    # ── Signal queries ─────────────────────────────────────────────────────────
+    # ── Signal queries 
 
     def get_signal(self, product: str) -> tuple[int, float]:
         """
@@ -419,7 +406,7 @@ class AnonymousInsiderTracker:
             return 0.0
         return self._states[product].hit_rate()
 
-    # ── Order generation ───────────────────────────────────────────────────────
+    # ── Order generation 
 
     def follow_orders(
         self,
@@ -496,14 +483,11 @@ class AnonymousInsiderTracker:
         }
 
 
-# ── Standalone test ────────────────────────────────────────────────────────────
+# simulates insider to see if this works - only really used for initial testing!
+#long signal is expected 
 
 if __name__ == "__main__":
-    """
-    Simulates an insider who places a suspiciously large bid right at the
-    rolling local minimum.  Expects the tracker to emit a LONG signal.
-    Run: python anonymous_insider_tracker.py
-    """
+    
     import pprint
 
     class MockOrderDepth:
@@ -536,7 +520,7 @@ if __name__ == "__main__":
     print(f"Rolling min after warm-up: {roll_min}")
     print(f"Signal (should be NEUTRAL): {tracker.get_signal('KELP')}\n")
 
-    # Now inject a tick with a VERY large bid at the rolling min
+    # Now inject a tick with a VERY large bid at the rolling min!
     insider_ts = 100 * (ROLLING_WINDOW + 1)
     insider_depth = MockOrderDepth(
         bids={
