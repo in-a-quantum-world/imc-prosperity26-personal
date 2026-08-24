@@ -1,14 +1,9 @@
 """
-Insider Trading Statistical Detector
---------------------------------------
-Analyzes IMC Prosperity price + trade CSVs to detect whether trades cluster
+Insider Trading Statistical Detector!!
+this analysis price + trade CSVs to detect whether trades cluster
 suspiciously at local price extrema (buying at troughs, selling at peaks),
-which would be near-impossible without advance knowledge.
+which should not be possible unless you have insider info.
 
-Usage:
-    python insider_analysis.py <path_to_data_dir>
-
-    e.g. python insider_analysis.py "C:/Users/rucha/Downloads/ROUND1"
 """
 
 import csv
@@ -17,12 +12,10 @@ import sys
 import math
 from collections import defaultdict
 
-# -- Config ---------------------------------------------------------------------
 EXTREMA_WINDOW    = 5      # ticks on each side to qualify as local max/min
 PRICE_TOLERANCE   = 0.5    # how close (in price units) a trade must be to an extremum
 DAYS              = ["-2", "-1", "0"]
 
-# -- Helpers --------------------------------------------------------------------
 
 def load_prices(data_dir: str) -> dict[str, list[tuple[int, int, float]]]:
     """Returns {product: [(day, timestamp, mid_price), ...]} sorted by (day, ts)."""
